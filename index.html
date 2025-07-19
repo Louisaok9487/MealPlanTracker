@@ -188,6 +188,16 @@
         };
 
         const getPlanForDate = async (dateStr) => {
+            // First check if there's a single-day plan for this specific date
+            const singleDayDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${dateStr}-single`);
+            const singleDayDocSnap = await getDoc(singleDayDocRef);
+            if (singleDayDocSnap.exists()) {
+                const data = singleDayDocSnap.data();
+                if (data.type === 'single-day' && data.endDate === dateStr) {
+                    return data.plan;
+                }
+            }
+            
             const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
             const planDocSnap = await getDoc(planDocRef);
             if(planDocSnap.exists() && planDocSnap.data().order) {
@@ -198,7 +208,13 @@
 
             const q = query( collection(db, `artifacts/${appId}/users/${userId}/mealPlans`), where("effectiveDate", "<=", dateStr), orderBy("effectiveDate", "desc"), limit(1) );
             const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) return querySnapshot.docs[0].data().plan;
+            if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                const data = doc.data();
+                if (data.type !== 'single-day') {
+                    return data.plan;
+                }
+            }
             return initialMealPlan;
         };
         
@@ -270,7 +286,6 @@
         
         const renderPlanEditor = async () => {
             views.plan.innerHTML = '<div class="text-center p-4">Loading plan...</div>';
-            // LOGIC FIX: Always edit the plan based on the CURRENT date, not the selected one.
             const todayStr = toISODateString(new Date());
             const currentPlan = await getPlanForDate(todayStr);
             views.plan.innerHTML = '';
@@ -293,16 +308,40 @@
                     <button data-meal-name="${mealName}" class="add-item-btn mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Item</button>`;
                 views.plan.appendChild(editorCard);
             });
+            
             views.plan.insertAdjacentHTML('beforeend', `
                 <div class="mt-6 pt-6 border-t">
-                    <div class="mb-4 p-4 bg-blue-50 rounded-lg">
-                        <p class="text-sm text-blue-700">
-                            <strong>Note:</strong> Changes to the meal plan will apply from today (${new Date().toLocaleDateString()}) forward. 
-                            Past tracking data will remain unchanged.
-                        </p>
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-md font-semibold text-gray-900 mb-3">Apply Changes To:</h4>
+                        <div class="space-y-3">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="apply-option" value="today-only" class="mr-3 text-indigo-600">
+                                <div>
+                                    <span class="font-medium text-gray-900">Today Only</span>
+                                    <p class="text-sm text-gray-600">Create a custom meal plan just for ${new Date().toLocaleDateString()}</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="apply-option" value="today-forward" class="mr-3 text-indigo-600" checked>
+                                <div>
+                                    <span class="font-medium text-gray-900">Today and All Future Days</span>
+                                    <p class="text-sm text-gray-600">Update the standard meal plan from ${new Date().toLocaleDateString()} onward</p>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="mt-3 p-3 bg-blue-50 rounded-md">
+                            <p class="text-sm text-blue-700">
+                                <svg class="inline w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                                Past tracking data will never be changed
+                            </p>
+                        </div>
                     </div>
-                    <button id="add-meal-btn" class="w-full text-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Add Meal / Snack</button>
-                    <div class="flex justify-end mt-4"><button id="save-plan-btn" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700">Save Meal Plan</button></div>
+                    <button id="add-meal-btn" class="w-full text-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 mb-4">Add Meal / Snack</button>
+                    <div class="flex justify-end">
+                        <button id="save-plan-btn" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700">Save Meal Plan</button>
+                    </div>
                 </div>
             `);
         };
@@ -489,9 +528,8 @@
             button.disabled = true;
             button.textContent = 'Saving...';
 
-            const effectiveDateStr = toISODateString(new Date());
-            const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, effectiveDateStr);
-            const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
+            const applyOption = document.querySelector('input[name="apply-option"]:checked').value;
+            const todayStr = toISODateString(new Date());
             
             const newPlan = {};
             const newMealOrder = [];
@@ -510,30 +548,54 @@
 
             try {
                 const batch = writeBatch(db);
-                batch.set(planDocRef, { plan: newPlan, effectiveDate: effectiveDateStr });
-                batch.set(mealOrderRef, { order: newMealOrder });
+                
+                if (applyOption === 'today-only') {
+                    const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${todayStr}-single`);
+                    batch.set(planDocRef, { 
+                        plan: newPlan, 
+                        effectiveDate: todayStr,
+                        endDate: todayStr,
+                        type: 'single-day'
+                    });
+                    
+                    const todayTrackingRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr);
+                    batch.delete(todayTrackingRef);
+                    delete localTrackingData[todayStr];
 
-                const futureTrackingQuery = query(
-                    collection(db, `artifacts/${appId}/users/${userId}/tracking`),
-                    where(documentId(), ">=", effectiveDateStr)
-                );
-                const futureDocsSnapshot = await getDocs(futureTrackingQuery);
-                futureDocsSnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
+                } else { // today-forward
+                    const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, todayStr);
+                    const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
+                    
+                    batch.set(planDocRef, { plan: newPlan, effectiveDate: todayStr });
+                    batch.set(mealOrderRef, { order: newMealOrder });
+
+                    const futureTrackingQuery = query(
+                        collection(db, `artifacts/${appId}/users/${userId}/tracking`),
+                        where(documentId(), ">=", todayStr)
+                    );
+                    const futureDocsSnapshot = await getDocs(futureTrackingQuery);
+                    futureDocsSnapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    mealOrder = newMealOrder;
+                    
+                    Object.keys(localTrackingData).forEach(keyDate => {
+                        if (keyDate >= todayStr) {
+                            delete localTrackingData[keyDate];
+                        }
+                    });
+                }
 
                 await batch.commit();
-
-                mealOrder = newMealOrder;
                 
-                Object.keys(localTrackingData).forEach(keyDate => {
-                    if (keyDate >= effectiveDateStr) {
-                        delete localTrackingData[keyDate];
-                    }
-                });
-
-                alert('Meal plan updated successfully. It will apply from today forward.');
+                const successMessage = applyOption === 'today-only' 
+                    ? 'Custom meal plan created for today only!'
+                    : 'Meal plan updated for today and all future days!';
+                    
+                alert(successMessage);
                 await renderTracker();
+                
             } catch (error) {
                 console.error("Error saving meal plan:", error);
                 alert("Could not save meal plan. Please try again.");
