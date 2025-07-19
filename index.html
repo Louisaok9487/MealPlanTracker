@@ -242,7 +242,6 @@
             mealOrder.forEach(mealName => {
                 if (!dailyData[mealName]) return;
                 const mealItems = dailyData[mealName];
-                // LAYOUT CHANGE: Card style applied to each meal
                 const mealCard = document.createElement('div');
                 mealCard.className = 'bg-white p-4 sm:p-6 rounded-lg shadow';
                 
@@ -287,7 +286,6 @@
             
             mealOrder.forEach(mealName => {
                 const mealItems = currentPlan[mealName] || [];
-                // LAYOUT CHANGE: Card style applied to each meal editor
                 const editorCard = document.createElement('div');
                 editorCard.className = 'bg-white p-4 sm:p-6 rounded-lg shadow meal-card';
 
@@ -521,27 +519,15 @@
 
                 mealOrder = newMealOrder;
                 
-                const oldTrackingDataForDay = localTrackingData[dateStr] || {};
-                const newTrackingData = clonePlanWithDefaults(newPlan);
-                
-                Object.entries(newTrackingData).forEach(([mealName, newItems]) => {
-                    if (oldTrackingDataForDay[mealName] && Array.isArray(oldTrackingDataForDay[mealName])) {
-                        newItems.forEach(newItem => {
-                            const oldItem = oldTrackingDataForDay[mealName].find(i => i.id === newItem.id);
-                            if (oldItem) {
-                                newItem.done = oldItem.done;
-                                newItem.comment = oldItem.comment;
-                            }
-                        });
+                // LOGIC FIX: Invalidate cache for all dates on or after the new plan's effective date
+                Object.keys(localTrackingData).forEach(keyDate => {
+                    if (keyDate >= dateStr) {
+                        delete localTrackingData[keyDate];
                     }
                 });
-                
-                localTrackingData[dateStr] = newTrackingData;
-                const trackingDocRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
-                await setDoc(trackingDocRef, newTrackingData);
 
-                alert('Meal plan updated successfully.');
-                await renderTracker();
+                alert('Meal plan updated successfully. It will apply from the selected date forward.');
+                await renderTracker(); // Re-render the current day with the new plan
             } catch (error) {
                 console.error("Error saving meal plan:", error);
                 alert("Could not save meal plan. Please try again.");
