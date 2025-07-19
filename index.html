@@ -136,7 +136,6 @@
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         const app = initializeApp(firebaseConfig);
-        // FIX: Initialize Firestore with long polling to fix connection issues in some environments.
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
         const auth = getAuth(app);
 
@@ -553,7 +552,22 @@
             document.getElementById('next-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderHistory(); });
         };
 
+        const showConnectionError = () => {
+            loadingOverlay.classList.add('hidden');
+            const mainContent = document.querySelector('main');
+            mainContent.innerHTML = `
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
+                    <p class="font-bold">Connection Error</p>
+                    <p>Could not connect to the database. This is likely caused by security software (like Avast Web Guard), a browser extension (like an ad blocker), or a network firewall blocking the connection.</p>
+                    <p class="mt-2">Please try disabling these services or using a different network, then do a hard refresh (Ctrl+Shift+R).</p>
+                </div>
+            `;
+        };
+
         const init = async () => {
+            // Add a timeout to the loading process
+            const loadingTimeout = setTimeout(showConnectionError, 10000); // 10 seconds
+
             loadingOverlay.classList.remove('hidden');
             datePicker.value = toISODateString(selectedDate);
             currentDateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -563,14 +577,22 @@
                     userId = user.uid;
                     userIdEl.textContent = userId;
                     
-                    const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
-                    const notesDocSnap = await getDoc(notesDocRef);
-                    notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
-                    
-                    await renderTracker();
-                    renderNotes();
-                    setupEventListeners();
-                    loadingOverlay.classList.add('hidden');
+                    try {
+                        const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
+                        const notesDocSnap = await getDoc(notesDocRef);
+                        notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
+                        
+                        await renderTracker();
+                        renderNotes();
+                        setupEventListeners();
+                        
+                        clearTimeout(loadingTimeout); // Success, so clear the timeout
+                        loadingOverlay.classList.add('hidden');
+                    } catch (error) {
+                        console.error("Firestore initialization failed:", error);
+                        clearTimeout(loadingTimeout);
+                        showConnectionError();
+                    }
                 }
             });
 
@@ -579,7 +601,8 @@
                 else await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
-                loadingOverlay.innerHTML = '<p class="text-red-500">Error: Could not authenticate.</p>';
+                clearTimeout(loadingTimeout);
+                showConnectionError();
             }
         };
 
