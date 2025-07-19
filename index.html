@@ -8,179 +8,162 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .tab-button.active {
-            border-bottom-color: #4f46e5;
-            color: #4f46e5;
-            font-weight: 600;
-        }
-        .checkbox-custom:checked + .checkbox-label .checkbox-icon {
-            display: block;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .tab-button.active { border-bottom-color: #4f46e5; color: #4f46e5; font-weight: 600; }
+        .checkbox-custom:checked + .checkbox-label .checkbox-icon { display: block; }
+        .calendar-day { min-height: 6rem; transition: background-color 0.2s; }
+        .calendar-day:hover { background-color: #f0f0f0; }
+        .adherence-high { background-color: #dcfce7; } /* green-100 */
+        .adherence-medium { background-color: #fef9c3; } /* yellow-100 */
+        .adherence-low { background-color: #fee2e2; } /* red-100 */
+        .adherence-none { background-color: #f3f4f6; } /* gray-100 */
+        .today-highlight { box-shadow: 0 0 0 2px #4f46e5; z-index: 1; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <div id="app-container" class="max-w-4xl mx-auto p-4 md:p-6">
+    <div id="app-container" class="max-w-5xl mx-auto p-4 md:p-6">
 
-        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Relentless Meal Plan Tracker</h1>
                 <p class="text-gray-500 mt-1">Your daily guide to disciplined eating. Stay focused.</p>
             </div>
             <div class="text-xs text-gray-500 mt-4 md:mt-0 text-left md:text-right">
-                <span class="font-semibold">User ID:</span> <span id="userId">Loading...</span><br>
-                <span class="font-semibold">Today:</span> <span id="currentDate"></span>
+                <p><span class="font-semibold">User ID:</span> <span id="userId">Loading...</span></p>
+                <p><span class="font-semibold">Today:</span> <span id="currentDate"></span></p>
             </div>
         </header>
 
-        <!-- Tabs -->
         <div class="border-b border-gray-200 mb-6">
             <nav class="flex space-x-4" aria-label="Tabs">
-                <button id="tab-tracker" class="tab-button active py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Daily Tracker</button>
-                <button id="tab-dashboard" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Dashboard</button>
-                <button id="tab-plan" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Edit Meal Plan</button>
-                <button id="tab-notes" class="tab-button py-4 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">Guidelines</button>
+                <button id="tab-tracker" class="tab-button active py-4 px-1 border-b-2 font-medium text-sm">Daily Tracker</button>
+                <button id="tab-history" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">History</button>
+                <button id="tab-plan" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Edit Meal Plan</button>
+                <button id="tab-notes" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Guidelines</button>
             </nav>
         </div>
 
-        <!-- Main Content -->
         <main>
-            <!-- Daily Tracker View -->
-            <div id="view-tracker" class="space-y-6">
-                <!-- Meals will be dynamically inserted here -->
+            <div id="view-tracker">
+                <div class="flex items-center justify-center mb-6">
+                    <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div id="tracker-content" class="space-y-6"></div>
             </div>
 
-            <!-- Dashboard View -->
-            <div id="view-dashboard" class="hidden">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-900">Weekly Adherence</h3>
-                        <p class="text-3xl font-bold text-indigo-600 mt-2" id="weekly-adherence-score">0%</p>
-                        <p class="text-sm text-gray-500">Based on checked items this week.</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-900">Daily Progress (Last 7 Days)</h3>
-                        <div class="mt-4 h-40">
-                            <canvas id="adherenceChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow mt-6">
-                    <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
-                    <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
-                        <!-- Comments will be dynamically inserted here -->
-                        <p class="text-gray-500">No comments logged yet.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Meal Plan View -->
-            <div id="view-plan" class="hidden space-y-6">
-                 <!-- Meal plan editor will be dynamically inserted here -->
-            </div>
-            
-            <!-- Guidelines View -->
-            <div id="view-notes" class="hidden">
+            <div id="view-history" class="hidden">
                 <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <button id="prev-month-btn" class="p-2 rounded-md hover:bg-gray-100">&lt;</button>
+                        <h2 id="calendar-month-year" class="text-xl font-semibold"></h2>
+                        <button id="next-month-btn" class="p-2 rounded-md hover:bg-gray-100">&gt;</button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden" id="calendar-grid">
+                        <div class="text-center font-semibold text-sm py-2 bg-gray-50">Sun</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Mon</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Tue</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Wed</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Thu</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Fri</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Sat</div>
+                    </div>
+                </div>
+                <div id="dashboard-section" class="mt-6"></div>
+            </div>
+
+            <div id="view-plan" class="hidden space-y-6"></div>
+            
+            <div id="view-notes" class="hidden">
+                 <div class="bg-white p-6 rounded-lg shadow">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-900">Important Guidelines</h3>
                         <div>
                             <button id="edit-notes-btn" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Edit</button>
-                            <button id="save-notes-btn" class="hidden text-sm font-semibold text-indigo-600 hover:text-indigo-800">Save</button>
+                            <button id="save-notes-btn" class="hidden text-sm font-semibold text-green-600 hover:text-green-800">Save</button>
+                            <button id="cancel-notes-btn" class="hidden ml-2 text-sm font-semibold text-red-600 hover:text-red-800">Cancel</button>
                         </div>
                     </div>
                     <div id="notes-list-container">
-                        <div id="notes-list" class="space-y-3 text-gray-700">
-                           <!-- Notes will be dynamically inserted here -->
-                        </div>
+                        <div id="notes-list" class="space-y-3 text-gray-700"></div>
                         <button id="add-note-btn" class="hidden mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Guideline</button>
                     </div>
                 </div>
             </div>
         </main>
         
-        <!-- Loading Spinner -->
         <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
         </div>
-
     </div>
 
     <script type="module">
-        // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, getDocs, where, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- PRE-CONFIGURED VARIABLES ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-meal-tracker';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // --- FIREBASE INITIALIZATION ---
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- GLOBAL STATE ---
         let userId = null;
-        let mealPlan = {};
-        let trackingData = {};
+        let localTrackingData = {};
         let notes = [];
-        let chartInstance = null;
         let isEditingNotes = false;
+        let selectedDate = new Date();
+        let calendarDate = new Date();
         const mealOrder = ["Meal 1", "Meal 2", "Meal 3", "Meal 4", "Snack"];
         
-        // --- INITIAL MEAL PLAN (from PDF) ---
-        const initialMealPlan = {
-            "Meal 1": [ { id: "item1", name: "4 whole eggs", done: false, comment: "" }, { id: "item2", name: "4 slices of wholemeal bread", done: false, comment: "" }, { id: "item3", name: "Black coffee", done: false, comment: "" } ],
-            "Meal 2": [ { id: "item4", name: "250g white rice", done: false, comment: "" }, { id: "item5", name: "170g of chicken/white fish/lean beef", done: false, comment: "" }, { id: "item6", name: "100g mixed vegetables", done: false, comment: "" } ],
-            "Meal 3": [ { id: "item7", name: "50g Oats", done: false, comment: "" }, { id: "item8", name: "1 banana", done: false, comment: "" }, { id: "item9", name: "1 scoop of whey isolate protein", done: false, comment: "" }, { id: "item10", name: "100g mixed berries", done: false, comment: "" } ],
-            "Meal 4": [ { id: "item11", name: "250g white rice", done: false, comment: "" }, { id: "item12", name: "170g of chicken/white fish/lean beef", done: false, comment: "" }, { id: "item13", name: "100g mixed vegetables", done: false, comment: "" } ],
-            "Snack": [ { id: "item14", name: "1 Banana", done: false, comment: "" }, { id: "item15", name: "High protein bar (Musashi with 45g protein)", done: false, comment: "" } ]
-        };
+        const initialMealPlan = { "Meal 1": [ { id: "item1", name: "4 whole eggs" }, { id: "item2", name: "4 slices of wholemeal bread" }, { id: "item3", name: "Black coffee" } ], "Meal 2": [ { id: "item4", name: "250g white rice" }, { id: "item5", name: "170g of chicken/white fish/lean beef" }, { id: "item6", name: "100g mixed vegetables" } ], "Meal 3": [ { id: "item7", name: "50g Oats" }, { id: "item8", name: "1 banana" }, { id: "item9", name: "1 scoop of whey isolate protein" }, { id: "item10", name: "100g mixed berries" } ], "Meal 4": [ { id: "item11", name: "250g white rice" }, { id: "item12", name: "170g of chicken/white fish/lean beef" }, { id: "item13", name: "100g mixed vegetables" } ], "Snack": [ { id: "item14", name: "1 Banana" }, { id: "item15", name: "High protein bar (Musashi with 45g protein)" } ] };
+        const initialNotes = [ "Daily water intake of 3L", "30 minute walk daily for the first 4 weeks", "All ingredients should be weighed after cooking", "Make sure to use a cooking oil spray can when needed", "Be mindful with sauces and seasoning as they can add up in calories and sodium intake", "No other snacking allowed except the one in the diet plan", "No noodles for the first 4 weeks", "No pork or salmon for the first 4 weeks", "No cheat meals until further notice", "Limit of 2 black coffees a day (no milk)" ];
 
-        const initialNotes = [ "Daily water intake of 3L", "30 minute walk daily for the first 4 weeks", "All ingredients should be weighed after cooking", "Use a cooking oil spray can when needed", "Be mindful with sauces and seasoning", "No other snacking allowed", "No noodles for the first 4 weeks", "No pork or salmon for the first 4 weeks", "No cheat meals until further notice", "Limit of 2 black coffees a day (no milk)" ];
-
-        // --- UI ELEMENTS ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const userIdEl = document.getElementById('userId');
         const currentDateEl = document.getElementById('currentDate');
-        const views = {
-            tracker: document.getElementById('view-tracker'),
-            dashboard: document.getElementById('view-dashboard'),
-            plan: document.getElementById('view-plan'),
-            notes: document.getElementById('view-notes'),
-        };
-        const tabs = {
-            tracker: document.getElementById('tab-tracker'),
-            dashboard: document.getElementById('tab-dashboard'),
-            plan: document.getElementById('tab-plan'),
-            notes: document.getElementById('tab-notes'),
-        };
+        const views = { tracker: document.getElementById('view-tracker'), history: document.getElementById('view-history'), plan: document.getElementById('view-plan'), notes: document.getElementById('view-notes') };
+        const tabs = { tracker: document.getElementById('tab-tracker'), history: document.getElementById('tab-history'), plan: document.getElementById('tab-plan'), notes: document.getElementById('tab-notes') };
+        const datePicker = document.getElementById('date-picker');
+        const trackerContent = document.getElementById('tracker-content');
         const notesListEl = document.getElementById('notes-list');
         const editNotesBtn = document.getElementById('edit-notes-btn');
         const saveNotesBtn = document.getElementById('save-notes-btn');
+        const cancelNotesBtn = document.getElementById('cancel-notes-btn');
         const addNoteBtn = document.getElementById('add-note-btn');
 
-        // --- DATE HELPERS ---
-        const getTodayDateString = () => new Date().toISOString().split('T')[0];
+        const toISODateString = (date) => date.toISOString().split('T')[0];
 
-        // --- RENDER FUNCTIONS ---
-        const renderTracker = () => {
-            const todayStr = getTodayDateString();
-            const dailyData = trackingData[todayStr] || mealPlan;
-            views.tracker.innerHTML = '';
+        const getPlanForDate = async (dateStr) => {
+            const q = query( collection(db, `artifacts/${appId}/users/${userId}/mealPlans`), where("effectiveDate", "<=", dateStr), orderBy("effectiveDate", "desc"), limit(1) );
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) return querySnapshot.docs[0].data().plan;
+            return initialMealPlan;
+        };
+        
+        const clonePlanWithDefaults = (plan) => {
+            const newPlan = JSON.parse(JSON.stringify(plan));
+            Object.values(newPlan).forEach(meal => meal.forEach(item => {
+                item.done = false;
+                item.comment = "";
+            }));
+            return newPlan;
+        };
 
-            if (Object.keys(dailyData).length === 0) {
-                views.tracker.innerHTML = '<p class="text-center text-gray-500">Your meal plan is empty. Go to the "Edit Meal Plan" tab to add meals.</p>';
-                return;
+        const renderTracker = async () => {
+            trackerContent.innerHTML = '<div class="text-center p-4">Loading meals...</div>';
+            const dateStr = toISODateString(selectedDate);
+            let dailyData = localTrackingData[dateStr];
+
+            if (!dailyData) {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    dailyData = docSnap.data();
+                } else {
+                    const plan = await getPlanForDate(dateStr);
+                    dailyData = clonePlanWithDefaults(plan);
+                }
+                localTrackingData[dateStr] = dailyData;
             }
-
+            
+            trackerContent.innerHTML = '';
             mealOrder.forEach(mealName => {
                 if (!dailyData[mealName]) return;
                 const mealItems = dailyData[mealName];
@@ -190,115 +173,106 @@
                 let itemsHtml = mealItems.map(item => `
                     <div class="flex items-start space-x-4 py-2 border-b border-gray-100 last:border-b-0">
                         <div class="flex-shrink-0 pt-1">
-                             <input type="checkbox" id="check-${item.id}" data-meal="${mealName}" data-item-id="${item.id}" class="checkbox-custom hidden" ${item.done ? 'checked' : ''}>
-                             <label for="check-${item.id}" class="checkbox-label w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center cursor-pointer transition-all ${item.done ? 'bg-indigo-600 border-indigo-600' : 'bg-white'}">
-                                <svg class="checkbox-icon hidden w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
-                             </label>
+                             <input type="checkbox" id="check-${item.id}-${dateStr}" data-meal="${mealName}" data-item-id="${item.id}" class="checkbox-custom hidden" ${item.done ? 'checked' : ''}>
+                             <label for="check-${item.id}-${dateStr}" class="checkbox-label w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center cursor-pointer"><svg class="checkbox-icon hidden w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></label>
                         </div>
                         <div class="flex-grow">
                             <p class="font-medium text-gray-800">${item.name}</p>
-                            <div class="comment-section mt-2 ${item.done ? 'hidden' : ''}">
-                                <input type="text" data-meal="${mealName}" data-item-id="${item.id}" value="${item.comment || ''}" placeholder="Add a comment..." class="comment-input w-full text-sm p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
-                            </div>
+                            <div class="comment-section mt-2 ${item.done ? 'hidden' : ''}"><input type="text" data-meal="${mealName}" data-item-id="${item.id}" value="${item.comment || ''}" placeholder="Add a comment..." class="comment-input w-full text-sm p-2 border rounded-md"></div>
                         </div>
                     </div>`).join('');
 
                 mealCard.innerHTML = `<h3 class="text-xl font-semibold text-gray-800 mb-4">${mealName}</h3><div class="space-y-2">${itemsHtml}</div>`;
-                views.tracker.appendChild(mealCard);
+                trackerContent.appendChild(mealCard);
             });
         };
         
-        const renderPlanEditor = () => {
+        const renderPlanEditor = async () => {
+            views.plan.innerHTML = '<div class="text-center p-4">Loading plan...</div>';
+            const dateStr = toISODateString(selectedDate);
+            const currentPlan = await getPlanForDate(dateStr);
             views.plan.innerHTML = '';
+            
             mealOrder.forEach(mealName => {
-                if (!mealPlan[mealName]) return;
-                const mealItems = mealPlan[mealName];
+                const mealItems = currentPlan[mealName] || [];
                 const editorCard = document.createElement('div');
                 editorCard.className = 'bg-white p-6 rounded-lg shadow';
 
-                let itemsHtml = mealItems.map((item) => `
-                    <div class="flex items-center space-x-2 mb-2">
-                        <input type="text" value="${item.name}" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="${item.id}" class="plan-item-input flex-grow p-2 border border-gray-300 rounded-md">
-                        <button data-meal="${mealName}" data-item-id="${item.id}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>`).join('');
+                let itemsHtml = mealItems.map((item) => `<div class="flex items-center space-x-2 mb-2"><input type="text" value="${item.name}" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="${item.id}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" data-item-id="${item.id}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`).join('');
 
-                editorCard.innerHTML = `<h3 class="text-xl font-semibold text-gray-800 mb-4">${mealName}</h3><div id="editor-${mealName.replace(/\s+/g, '')}">${itemsHtml}</div><button data-meal="${mealName}" class="add-item-btn mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Item</button>`;
+                editorCard.innerHTML = `<h3 class="text-xl font-semibold text-gray-800 mb-4">${mealName}</h3><div class="meal-editor-items">${itemsHtml}</div><button data-meal="${mealName}" class="add-item-btn mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Item</button>`;
                 views.plan.appendChild(editorCard);
             });
+            views.plan.insertAdjacentHTML('beforeend', '<div class="flex justify-end mt-4"><button id="save-plan-btn" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700">Save Meal Plan</button></div>');
         };
 
         const renderNotes = () => {
             editNotesBtn.classList.toggle('hidden', isEditingNotes);
             saveNotesBtn.classList.toggle('hidden', !isEditingNotes);
+            cancelNotesBtn.classList.toggle('hidden', !isEditingNotes);
             addNoteBtn.classList.toggle('hidden', !isEditingNotes);
 
             if (isEditingNotes) {
-                notesListEl.innerHTML = notes.map((note, index) => `
-                    <div class="flex items-center space-x-2">
-                        <input type="text" value="${note}" placeholder="New guideline..." data-index="${index}" class="note-input flex-grow p-2 border border-gray-300 rounded-md">
-                        <button data-index="${index}" class="remove-note-btn p-2 text-red-500 hover:bg-red-100 rounded-md">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>`).join('');
+                notesListEl.innerHTML = notes.map((note, index) => `<div class="flex items-center space-x-2"><input type="text" value="${note}" placeholder="New guideline..." data-index="${index}" class="note-input flex-grow p-2 border rounded-md"><button data-index="${index}" class="remove-note-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`).join('');
             } else {
-                notesListEl.innerHTML = notes.map(note => `
-                    <li class="flex items-start">
-                        <svg class="flex-shrink-0 h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>${note}</span>
-                    </li>`).join('');
+                notesListEl.innerHTML = notes.map(note => `<li class="flex items-start"><svg class="flex-shrink-0 h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>${note}</span></li>`).join('');
             }
         };
 
-        const renderDashboard = async () => {
-            const today = new Date();
-            const weeklyData = [];
-            let totalItems = 0;
-            let completedItems = 0;
-            const comments = [];
-
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(today.getDate() - i);
-                const dateStr = date.toISOString().split('T')[0];
-                const dayData = trackingData[dateStr];
-                let dayTotal = 0, dayCompleted = 0;
-
-                if (dayData) {
-                    Object.keys(dayData).forEach(mealName => {
-                        const meal = dayData[mealName];
-                        dayTotal += meal.length;
-                        meal.forEach(item => {
-                            if (item.done) dayCompleted++;
-                            if (item.comment) comments.push({ date: dateStr, meal: mealName, item: item.name, comment: item.comment });
-                        });
-                    });
-                }
-                totalItems += dayTotal;
-                completedItems += dayCompleted;
-                weeklyData.push({ date: date.toLocaleDateString('en-US', { weekday: 'short' }), adherence: dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0 });
-            }
-
-            document.getElementById('weekly-adherence-score').textContent = `${totalItems > 0 ? ((completedItems / totalItems) * 100).toFixed(0) : 0}%`;
+        const renderHistory = async () => {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+            document.getElementById('calendar-month-year').textContent = `${calendarDate.toLocaleString('default', { month: 'long' })} ${year}`;
             
-            const commentsLog = document.getElementById('comments-log');
-            commentsLog.innerHTML = comments.length > 0 ? comments.reverse().map(c => `<div class="p-2 bg-gray-50 rounded-md"><p class="text-sm text-gray-700"><strong>${c.item}:</strong> ${c.comment}</p><p class="text-xs text-gray-400">${c.date} (${c.meal})</p></div>`).join('') : '<p class="text-gray-500">No comments logged in the last 7 days.</p>';
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            
+            const startStr = toISODateString(firstDayOfMonth);
+            const endStr = toISODateString(lastDayOfMonth);
 
-            const ctx = document.getElementById('adherenceChart').getContext('2d');
-            if(chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: weeklyData.map(d => d.date), datasets: [{ label: 'Adherence %', data: weeklyData.map(d => d.adherence), backgroundColor: 'rgba(79, 70, 229, 0.8)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 1, borderRadius: 4 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `Adherence: ${context.raw.toFixed(1)}%` } } } }
-            });
+            const q = query(collection(db, `artifacts/${appId}/users/${userId}/tracking`), where(documentId(), ">=", startStr), where(documentId(), "<=", endStr));
+            const querySnapshot = await getDocs(q);
+            const monthData = {};
+            querySnapshot.forEach(doc => { monthData[doc.id] = doc.data(); });
+            
+            const calendarGrid = document.getElementById('calendar-grid');
+            while (calendarGrid.children.length > 7) { calendarGrid.removeChild(calendarGrid.lastChild); }
+
+            for (let i = 0; i < firstDayOfMonth.getDay(); i++) { calendarGrid.insertAdjacentHTML('beforeend', `<div class="bg-gray-50"></div>`); }
+
+            let totalAdherence = 0, daysWithData = 0;
+            for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+                const date = new Date(year, month, day);
+                const dateStr = toISODateString(date);
+                const dayData = monthData[dateStr];
+                
+                let adherenceClass = 'adherence-none', adherenceText = 'No Data', percentage = 0;
+                if (dayData) {
+                    let total = 0, done = 0;
+                    Object.values(dayData).forEach(meal => meal.forEach(item => { total++; if(item.done) done++; }));
+                    percentage = total > 0 ? (done / total) * 100 : 0;
+                    adherenceText = `${Math.round(percentage)}%`;
+                    if (percentage >= 90) adherenceClass = 'adherence-high';
+                    else if (percentage >= 50) adherenceClass = 'adherence-medium';
+                    else adherenceClass = 'adherence-low';
+                    totalAdherence += percentage;
+                    daysWithData++;
+                }
+                
+                const todayClass = toISODateString(new Date()) === dateStr ? 'today-highlight' : '';
+                calendarGrid.insertAdjacentHTML('beforeend', `<div class="calendar-day relative p-2 border-t border-l ${adherenceClass} ${todayClass}"><div class="font-semibold text-sm">${day}</div><div class="text-xs mt-1">${adherenceText}</div></div>`);
+            }
+            
+            const avgAdherence = daysWithData > 0 ? (totalAdherence / daysWithData).toFixed(0) : 0;
+            document.getElementById('dashboard-section').innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h3 class="text-lg font-semibold">Monthly Average Adherence</h3><p class="text-3xl font-bold text-indigo-600 mt-2">${avgAdherence}%</p></div>`;
         };
 
-        // --- DATA HANDLING ---
         const updateFirestoreTracking = async (mealName, itemId, property, value) => {
-            const todayStr = getTodayDateString();
-            const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr);
-            let dayData = trackingData[todayStr] || JSON.parse(JSON.stringify(mealPlan));
+            const dateStr = toISODateString(selectedDate);
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
+            let dayData = localTrackingData[dateStr];
+            if (!dayData) dayData = clonePlanWithDefaults(await getPlanForDate(dateStr));
+
             const meal = dayData[mealName];
             if (meal) {
                 const item = meal.find(i => i.id === itemId);
@@ -307,127 +281,92 @@
                     if (property === 'done' && value) item.comment = '';
                 }
             }
+            localTrackingData[dateStr] = dayData;
             await setDoc(docRef, dayData);
+            renderTracker();
         };
         
-        const updateFirestoreData = async () => {
-            const batch = writeBatch(db);
-            const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealPlan`);
-            batch.set(planDocRef, { plan: mealPlan, notes: notes });
-
-            const todayStr = getTodayDateString();
-            const todayDocRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr);
-            const oldTodayData = trackingData[todayStr] || {};
-            const newTodayData = JSON.parse(JSON.stringify(mealPlan));
-
-            Object.keys(newTodayData).forEach(mealName => {
-                if (oldTodayData[mealName]) {
-                    newTodayData[mealName].forEach(newItem => {
-                        const oldItem = oldTodayData[mealName].find(i => i.id === newItem.id);
-                        if (oldItem) {
-                            newItem.done = oldItem.done;
-                            newItem.comment = oldItem.comment;
-                        }
-                    });
-                }
+        const saveMealPlan = async () => {
+            const dateStr = toISODateString(selectedDate);
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, dateStr);
+            
+            const newPlan = {};
+            document.querySelectorAll('#view-plan .meal-editor-items').forEach(container => {
+                const mealName = container.nextElementSibling.dataset.meal;
+                newPlan[mealName] = [];
+                container.querySelectorAll('.plan-item-input').forEach(input => {
+                    if (input.value) {
+                        newPlan[mealName].push({ id: input.dataset.itemId, name: input.value });
+                    }
+                });
             });
-            batch.set(todayDocRef, newTodayData);
-            await batch.commit();
+
+            await setDoc(docRef, { plan: newPlan, effectiveDate: dateStr });
+            alert('Meal plan updated successfully. This will apply from the selected date forward.');
+            await renderPlanEditor();
         };
 
-        // --- EVENT LISTENERS ---
         const setupEventListeners = () => {
-            Object.keys(tabs).forEach(key => tabs[key].addEventListener('click', () => {
+            Object.keys(tabs).forEach(key => tabs[key].addEventListener('click', (e) => {
                 Object.values(tabs).forEach(t => t.classList.remove('active'));
-                tabs[key].classList.add('active');
+                e.target.classList.add('active');
                 Object.values(views).forEach(v => v.classList.add('hidden'));
                 views[key].classList.remove('hidden');
-                if (key === 'dashboard') renderDashboard();
+                if (key === 'history') renderHistory();
+                if (key === 'plan') renderPlanEditor();
             }));
 
-            views.tracker.addEventListener('change', e => { if (e.target.matches('input[type="checkbox"]')) updateFirestoreTracking(e.target.dataset.meal, e.target.dataset.itemId, 'done', e.target.checked); });
-            views.tracker.addEventListener('input', e => { if (e.target.matches('.comment-input')) updateFirestoreTracking(e.target.dataset.meal, e.target.dataset.itemId, 'comment', e.target.value); });
+            datePicker.addEventListener('change', () => { selectedDate = new Date(datePicker.value + 'T00:00:00'); renderTracker(); });
+
+            trackerContent.addEventListener('change', e => { if (e.target.matches('input[type="checkbox"]')) updateFirestoreTracking(e.target.dataset.meal, e.target.dataset.itemId, 'done', e.target.checked); });
+            trackerContent.addEventListener('input', e => { if (e.target.matches('.comment-input')) updateFirestoreTracking(e.target.dataset.meal, e.target.dataset.itemId, 'comment', e.target.value); });
             
             views.plan.addEventListener('click', e => {
                 const addBtn = e.target.closest('.add-item-btn');
                 const removeBtn = e.target.closest('.remove-item-btn');
+                const saveBtn = e.target.closest('#save-plan-btn');
                 if (addBtn) {
-                    mealPlan[addBtn.dataset.meal].push({ id: `item${Date.now()}`, name: "", done: false, comment: "" });
-                    renderPlanEditor(); updateFirestoreData();
+                    const mealName = addBtn.dataset.meal;
+                    const container = addBtn.previousElementSibling;
+                    container.insertAdjacentHTML('beforeend', `<div class="flex items-center space-x-2 mb-2"><input type="text" value="" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="item${Date.now()}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`);
                 }
-                if (removeBtn) {
-                    mealPlan[removeBtn.dataset.meal] = mealPlan[removeBtn.dataset.meal].filter(item => item.id !== removeBtn.dataset.itemId);
-                    renderPlanEditor(); updateFirestoreData();
-                }
-            });
-            views.plan.addEventListener('change', e => {
-                if (e.target.matches('.plan-item-input')) {
-                    const item = mealPlan[e.target.dataset.meal].find(i => i.id === e.target.dataset.itemId);
-                    if (item) { item.name = e.target.value; updateFirestoreData(); }
-                }
+                if (removeBtn) { removeBtn.parentElement.remove(); }
+                if (saveBtn) { saveMealPlan(); }
             });
 
-            // Guidelines editor listeners
             editNotesBtn.addEventListener('click', () => { isEditingNotes = true; renderNotes(); });
-            saveNotesBtn.addEventListener('click', () => { isEditingNotes = false; updateFirestoreData(); renderNotes(); });
+            cancelNotesBtn.addEventListener('click', () => { isEditingNotes = false; renderNotes(); });
+            saveNotesBtn.addEventListener('click', async () => {
+                isEditingNotes = false;
+                const newNotes = Array.from(document.querySelectorAll('.note-input')).map(i => i.value).filter(n => n.trim());
+                notes = newNotes;
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
+                await setDoc(docRef, { notes: notes });
+                renderNotes();
+            });
             addNoteBtn.addEventListener('click', () => { notes.push(""); renderNotes(); });
-            notesListEl.addEventListener('click', e => {
-                const removeBtn = e.target.closest('.remove-note-btn');
-                if (removeBtn) { notes.splice(parseInt(removeBtn.dataset.index, 10), 1); renderNotes(); }
-            });
-            notesListEl.addEventListener('change', e => {
-                 if (e.target.matches('.note-input')) notes[parseInt(e.target.dataset.index, 10)] = e.target.value;
-            });
+            notesListEl.addEventListener('click', e => { if (e.target.closest('.remove-note-btn')) { e.target.closest('.remove-note-btn').parentElement.remove(); } });
+            
+            document.getElementById('prev-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderHistory(); });
+            document.getElementById('next-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderHistory(); });
         };
 
-        // --- INITIALIZATION ---
         const init = async () => {
             loadingOverlay.classList.remove('hidden');
-            currentDateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            datePicker.value = toISODateString(selectedDate);
+            currentDateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
                     userIdEl.textContent = userId;
-                    const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealPlan`);
-                    const planDocSnap = await getDoc(planDocRef);
-
-                    if (planDocSnap.exists()) {
-                        const data = planDocSnap.data();
-                        mealPlan = data.plan || initialMealPlan;
-                        notes = data.notes || initialNotes;
-                    } else {
-                        mealPlan = initialMealPlan;
-                        notes = initialNotes;
-                        await setDoc(planDocRef, { plan: mealPlan, notes: notes });
-                    }
                     
-                    renderPlanEditor();
+                    const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
+                    const notesDocSnap = await getDoc(notesDocRef);
+                    notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
+                    
+                    await renderTracker();
                     renderNotes();
-
-                    const todayStr = getTodayDateString();
-                    onSnapshot(doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr), (docSnap) => {
-                        if (docSnap.exists()) {
-                            trackingData[todayStr] = docSnap.data();
-                        } else {
-                            const newTodayData = JSON.parse(JSON.stringify(mealPlan));
-                            trackingData[todayStr] = newTodayData;
-                            setDoc(doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr), newTodayData);
-                         }
-                        renderTracker();
-                    });
-
-                    for (let i = 0; i < 7; i++) {
-                        const date = new Date();
-                        date.setDate(new Date().getDate() - i);
-                        const dateStr = date.toISOString().split('T')[0];
-                        if (!trackingData[dateStr]) {
-                             const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
-                             const docSnap = await getDoc(docRef);
-                             if (docSnap.exists()) trackingData[dateStr] = docSnap.data();
-                        }
-                    }
-                    
                     setupEventListeners();
                     loadingOverlay.classList.add('hidden');
                 }
@@ -438,7 +377,7 @@
                 else await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
-                loadingOverlay.innerHTML = '<p class="text-red-500">Error: Could not authenticate. Please refresh.</p>';
+                loadingOverlay.innerHTML = '<p class="text-red-500">Error: Could not authenticate.</p>';
             }
         };
 
