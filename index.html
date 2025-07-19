@@ -188,7 +188,6 @@
         };
 
         const getPlanForDate = async (dateStr) => {
-            // First check if there's a single-day plan for this specific date
             const singleDayDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${dateStr}-single`);
             const singleDayDocSnap = await getDoc(singleDayDocRef);
             if (singleDayDocSnap.exists()) {
