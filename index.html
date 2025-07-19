@@ -180,13 +180,20 @@
         const cancelNotesBtn = document.getElementById('cancel-notes-btn');
         const addNoteBtn = document.getElementById('add-note-btn');
 
-        const toISODateString = (date) => date.toISOString().split('T')[0];
+        const toISODateString = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
 
         const getPlanForDate = async (dateStr) => {
             const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
             const planDocSnap = await getDoc(planDocRef);
-            if(planDocSnap.exists()) {
+            if(planDocSnap.exists() && planDocSnap.data().order) {
                 mealOrder = planDocSnap.data().order;
+            } else {
+                mealOrder = ["Meal 1", "Meal 2", "Meal 3", "Meal 4", "Snack"];
             }
 
             const q = query( collection(db, `artifacts/${appId}/users/${userId}/mealPlans`), where("effectiveDate", "<=", dateStr), orderBy("effectiveDate", "desc"), limit(1) );
@@ -496,7 +503,26 @@
                 await batch.commit();
 
                 mealOrder = newMealOrder;
-                localTrackingData = {}; 
+                
+                const oldTrackingDataForDay = localTrackingData[dateStr] || {};
+                const newTrackingData = clonePlanWithDefaults(newPlan);
+                
+                Object.entries(newTrackingData).forEach(([mealName, newItems]) => {
+                    if (oldTrackingDataForDay[mealName] && Array.isArray(oldTrackingDataForDay[mealName])) {
+                        newItems.forEach(newItem => {
+                            const oldItem = oldTrackingDataForDay[mealName].find(i => i.id === newItem.id);
+                            if (oldItem) {
+                                newItem.done = oldItem.done;
+                                newItem.comment = oldItem.comment;
+                            }
+                        });
+                    }
+                });
+                
+                localTrackingData[dateStr] = newTrackingData;
+                const trackingDocRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
+                await setDoc(trackingDocRef, newTrackingData);
+
                 alert('Meal plan updated successfully.');
                 await renderTracker();
             } catch (error) {
@@ -540,7 +566,10 @@
                 if (addMealBtn) {
                     const newMealName = prompt("Enter the name for the new meal (e.g., Meal 5):");
                     if (newMealName && newMealName.trim() !== "") {
-                        mealOrder.push(newMealName.trim());
+                        const tempOrder = [];
+                        document.querySelectorAll('#view-plan h3').forEach(h3 => tempOrder.push(h3.textContent));
+                        tempOrder.push(newMealName.trim());
+                        mealOrder = tempOrder;
                         renderPlanEditor();
                     }
                 }
@@ -604,7 +633,7 @@
             const notesDocSnap = await getDoc(notesDocRef);
             notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
             
-            selectedDate = new Date(); // Reset to today on login
+            selectedDate = new Date(); 
             datePicker.value = toISODateString(selectedDate);
 
             await renderTracker();
