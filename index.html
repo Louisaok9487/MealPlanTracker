@@ -25,10 +25,8 @@
         .today-highlight { box-shadow: 0 0 0 2px #4f46e5; z-index: 1; }
     </style>
 </head>
-<!-- LAYOUT CHANGE: Body background is now light grey for the card effect -->
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- LAYOUT CHANGE: Adjusted padding for better mobile view -->
     <div id="app-container" class="max-w-5xl mx-auto p-2 sm:p-4 md:p-6">
 
         <!-- Login View -->
@@ -70,20 +68,16 @@
                     <div class="flex items-center justify-center mb-6">
                         <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
-                    <!-- LAYOUT CHANGE: Spacing between cards adjusted -->
                     <div id="tracker-content" class="space-y-4"></div>
                 </div>
                 
                 <div id="view-dashboard" class="hidden">
-                     <!-- LAYOUT CHANGE: Gap between cards adjusted -->
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- LAYOUT CHANGE: Card style applied -->
                         <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold text-gray-900">Daily Adherence</h3>
                             <p class="text-3xl font-bold text-indigo-600 mt-2" id="daily-adherence-score">0%</p>
                             <p class="text-sm text-gray-500">Adherence for the selected day.</p>
                         </div>
-                        <!-- LAYOUT CHANGE: Card style applied -->
                         <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold text-gray-900">Weekly Progress (Last 7 Days)</h3>
                             <div class="mt-4 h-40">
@@ -91,7 +85,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- LAYOUT CHANGE: Card style applied -->
                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow mt-4">
                         <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
                         <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
@@ -101,7 +94,6 @@
                 </div>
 
                 <div id="view-history" class="hidden">
-                    <!-- LAYOUT CHANGE: Card style applied -->
                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
                         <div class="flex items-center justify-between mb-4">
                             <button id="prev-month-btn" class="p-2 rounded-md hover:bg-gray-100">&lt;</button>
@@ -114,11 +106,9 @@
                     </div>
                 </div>
 
-                <!-- LAYOUT CHANGE: Spacing between cards adjusted -->
                 <div id="view-plan" class="hidden space-y-4"></div>
                 
                 <div id="view-notes" class="hidden">
-                     <!-- LAYOUT CHANGE: Card style applied -->
                      <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Important Guidelines</h3>
@@ -516,7 +506,6 @@
                 batch.set(planDocRef, { plan: newPlan, effectiveDate: dateStr });
                 batch.set(mealOrderRef, { order: newMealOrder });
 
-                // LOGIC FIX: Find and delete all future tracking documents to force regeneration
                 const futureTrackingQuery = query(
                     collection(db, `artifacts/${appId}/users/${userId}/tracking`),
                     where(documentId(), ">", dateStr)
@@ -530,15 +519,17 @@
 
                 mealOrder = newMealOrder;
                 
-                // LOGIC FIX: Invalidate local cache for all dates on or after the new plan's effective date
                 Object.keys(localTrackingData).forEach(keyDate => {
-                    if (keyDate >= dateStr) {
+                    if (keyDate > dateStr) {
                         delete localTrackingData[keyDate];
                     }
                 });
 
+                // LOGIC FIX: Force-update the current day's tracker after saving
+                delete localTrackingData[dateStr];
+
                 alert('Meal plan updated successfully. It will apply from the selected date forward.');
-                await renderTracker(); // Re-render the current day with the new plan
+                await renderTracker();
             } catch (error) {
                 console.error("Error saving meal plan:", error);
                 alert("Could not save meal plan. Please try again.");
