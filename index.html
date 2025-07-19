@@ -270,6 +270,7 @@
         
         const renderPlanEditor = async () => {
             views.plan.innerHTML = '<div class="text-center p-4">Loading plan...</div>';
+            // LOGIC FIX: Always edit the plan based on the CURRENT date, not the selected one.
             const todayStr = toISODateString(new Date());
             const currentPlan = await getPlanForDate(todayStr);
             views.plan.innerHTML = '';
@@ -294,6 +295,12 @@
             });
             views.plan.insertAdjacentHTML('beforeend', `
                 <div class="mt-6 pt-6 border-t">
+                    <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-700">
+                            <strong>Note:</strong> Changes to the meal plan will apply from today (${new Date().toLocaleDateString()}) forward. 
+                            Past tracking data will remain unchanged.
+                        </p>
+                    </div>
                     <button id="add-meal-btn" class="w-full text-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300">Add Meal / Snack</button>
                     <div class="flex justify-end mt-4"><button id="save-plan-btn" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700">Save Meal Plan</button></div>
                 </div>
