@@ -145,7 +145,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId, initializeFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId, initializeFirestore, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBqGygWZLGGfJVeaIooLxtPKNaz2AZlOGk",
@@ -515,11 +515,22 @@
                 const batch = writeBatch(db);
                 batch.set(planDocRef, { plan: newPlan, effectiveDate: dateStr });
                 batch.set(mealOrderRef, { order: newMealOrder });
+
+                // LOGIC FIX: Find and delete all future tracking documents to force regeneration
+                const futureTrackingQuery = query(
+                    collection(db, `artifacts/${appId}/users/${userId}/tracking`),
+                    where(documentId(), ">", dateStr)
+                );
+                const futureDocsSnapshot = await getDocs(futureTrackingQuery);
+                futureDocsSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+
                 await batch.commit();
 
                 mealOrder = newMealOrder;
                 
-                // LOGIC FIX: Invalidate cache for all dates on or after the new plan's effective date
+                // LOGIC FIX: Invalidate local cache for all dates on or after the new plan's effective date
                 Object.keys(localTrackingData).forEach(keyDate => {
                     if (keyDate >= dateStr) {
                         delete localTrackingData[keyDate];
