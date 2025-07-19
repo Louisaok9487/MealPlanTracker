@@ -277,7 +277,7 @@
             mealOrder.forEach(mealName => {
                 const mealItems = currentPlan[mealName] || [];
                 const editorCard = document.createElement('div');
-                editorCard.className = 'bg-white p-6 rounded-lg shadow';
+                editorCard.className = 'bg-white p-6 rounded-lg shadow meal-card';
 
                 let itemsHtml = mealItems.map((item) => `<div class="flex items-center space-x-2 mb-2"><input type="text" value="${item.name}" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="${item.id}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" data-item-id="${item.id}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`).join('');
 
@@ -483,7 +483,7 @@
             
             const newPlan = {};
             const newMealOrder = [];
-            document.querySelectorAll('#view-plan .bg-white.p-6').forEach(card => {
+            document.querySelectorAll('#view-plan .meal-card').forEach(card => {
                 const h3 = card.querySelector('h3');
                 if(!h3) return;
                 const mealName = h3.textContent;
@@ -559,18 +559,24 @@
                 if (addBtn) {
                     const mealName = addBtn.dataset.meal;
                     const container = addBtn.previousElementSibling;
-                    container.insertAdjacentHTML('beforeend', `<div class="flex items-center space-x-2 mb-2"><input type="text" value="" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="item${Date.now()}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`);
+                    const newItemDiv = document.createElement('div');
+                    newItemDiv.className = 'flex items-center space-x-2 mb-2';
+                    newItemDiv.innerHTML = `<input type="text" value="" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="item${Date.now()}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button>`;
+                    container.appendChild(newItemDiv);
                 }
                 if (removeBtn) { removeBtn.parentElement.remove(); }
                 if (saveBtn) { saveMealPlan(saveBtn); }
                 if (addMealBtn) {
                     const newMealName = prompt("Enter the name for the new meal (e.g., Meal 5):");
                     if (newMealName && newMealName.trim() !== "") {
-                        const tempOrder = [];
-                        document.querySelectorAll('#view-plan h3').forEach(h3 => tempOrder.push(h3.textContent));
-                        tempOrder.push(newMealName.trim());
-                        mealOrder = tempOrder;
-                        renderPlanEditor();
+                        const newMealCard = document.createElement('div');
+                        newMealCard.className = 'bg-white p-6 rounded-lg shadow meal-card';
+                        newMealCard.innerHTML = `
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">${newMealName.trim()}</h3>
+                            <div class="meal-editor-items"></div>
+                            <button data-meal="${newMealName.trim()}" class="add-item-btn mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Item</button>
+                        `;
+                        addMealBtn.parentElement.insertBefore(newMealCard, addMealBtn);
                     }
                 }
             });
