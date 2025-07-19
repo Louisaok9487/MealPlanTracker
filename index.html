@@ -123,7 +123,16 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+        const firebaseConfig = {
+  apiKey: "AIzaSyByvrlOUMJx3dpTkyT2qlu_gCz0TCU8mDo",
+  authDomain: "pacific-nuance-426322-h3.firebaseapp.com",
+  projectId: "pacific-nuance-426322-h3",
+  storageBucket: "pacific-nuance-426322-h3.firebasestorage.app",
+  messagingSenderId: "1029315032097",
+  appId: "1:1029315032097:web:d8eba541bba9494a169f60"
+};
+        
+        
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-meal-tracker';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
