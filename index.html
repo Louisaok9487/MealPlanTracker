@@ -121,7 +121,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId, initializeFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
   apiKey: "AIzaSyByvrlOUMJx3dpTkyT2qlu_gCz0TCU8mDo",
@@ -132,12 +132,12 @@
   appId: "1:1029315032097:web:d8eba541bba9494a169f60"
 };
         
-        
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-meal-tracker';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // FIX: Initialize Firestore with long polling to fix connection issues in some environments.
+        const db = initializeFirestore(app, { experimentalForceLongPolling: true });
         const auth = getAuth(app);
 
         let userId = null;
@@ -450,19 +450,16 @@
             });
 
             try {
-                // Save the new meal plan version
                 await setDoc(planDocRef, { plan: newPlan, effectiveDate: dateStr });
 
-                // Update today's tracking data if it's the day being edited
                 const trackingDocRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
                 const oldTrackingDoc = await getDoc(trackingDocRef);
                 const newTrackingData = clonePlanWithDefaults(newPlan);
 
                 if (oldTrackingDoc.exists()) {
                     const oldData = oldTrackingDoc.data();
-                    // Preserve progress from old items that still exist
                     Object.entries(newTrackingData).forEach(([mealName, newItems]) => {
-                        if (oldData[mealName]) {
+                        if (oldData[mealName] && Array.isArray(oldData[mealName])) {
                             newItems.forEach(newItem => {
                                 const oldItem = oldData[mealName].find(i => i.id === newItem.id);
                                 if (oldItem) {
@@ -475,7 +472,7 @@
                 }
                 
                 await setDoc(trackingDocRef, newTrackingData);
-                localTrackingData[dateStr] = newTrackingData; // Update local cache immediately
+                localTrackingData[dateStr] = newTrackingData;
 
                 alert('Meal plan updated successfully.');
                 await renderTracker();
