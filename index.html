@@ -187,16 +187,20 @@
             return `${year}-${month}-${day}`;
         };
 
+        // BUG FIX: The original function could fail if the most recent plan was a 'single-day' plan.
+        // This new version correctly searches past any irrelevant single-day plans to find the correct base plan.
         const getPlanForDate = async (dateStr) => {
+            // 1. Check for a single-day override for the specific date. This takes highest priority.
             const singleDayDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${dateStr}-single`);
             const singleDayDocSnap = await getDoc(singleDayDocRef);
             if (singleDayDocSnap.exists()) {
                 const data = singleDayDocSnap.data();
-                if (data.type === 'single-day' && data.endDate === dateStr) {
+                if (data.type === 'single-day') {
                     return data.plan;
                 }
             }
             
+            // Get the current meal order
             const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
             const planDocSnap = await getDoc(planDocRef);
             if(planDocSnap.exists() && planDocSnap.data().order) {
@@ -205,15 +209,24 @@
                 mealOrder = ["Meal 1", "Meal 2", "Meal 3", "Meal 4", "Snack"];
             }
 
-            const q = query( collection(db, `artifacts/${appId}/users/${userId}/mealPlans`), where("effectiveDate", "<=", dateStr), orderBy("effectiveDate", "desc"), limit(1) );
+            // 2. If no single-day override, find the latest applicable "base" (non-single-day) plan.
+            const q = query(
+                collection(db, `artifacts/${appId}/users/${userId}/mealPlans`), 
+                where("effectiveDate", "<=", dateStr), 
+                orderBy("effectiveDate", "desc")
+            );
             const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const doc = querySnapshot.docs[0];
+
+            // Iterate through the results to find the first non-single-day plan.
+            for (const doc of querySnapshot.docs) {
                 const data = doc.data();
                 if (data.type !== 'single-day') {
+                    // Found the most recent base plan, return it.
                     return data.plan;
                 }
             }
+
+            // 3. If no base plan is found, return the hardcoded initial plan.
             return initialMealPlan;
         };
         
