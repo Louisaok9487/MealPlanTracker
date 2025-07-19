@@ -29,89 +29,103 @@
 
     <div id="app-container" class="max-w-5xl mx-auto p-4 md:p-6">
 
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Relentless Meal Plan Tracker</h1>
-                <p class="text-gray-500 mt-1">Your daily guide to disciplined eating. Stay focused.</p>
-            </div>
-            <div class="text-xs text-gray-500 mt-4 md:mt-0 text-left md:text-right">
-                <p><span class="font-semibold">User ID:</span> <span id="userId">Loading...</span></p>
-                <p><span class="font-semibold">Today:</span> <span id="currentDate"></span></p>
-            </div>
-        </header>
-
-        <div class="border-b border-gray-200 mb-6">
-            <nav class="flex flex-wrap space-x-4" aria-label="Tabs">
-                <button id="tab-tracker" class="tab-button active py-4 px-1 border-b-2 font-medium text-sm">Daily Tracker</button>
-                <button id="tab-dashboard" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Dashboard</button>
-                <button id="tab-history" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">History</button>
-                <button id="tab-plan" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Edit Meal Plan</button>
-                <button id="tab-notes" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Guidelines</button>
-            </nav>
+        <!-- Login View -->
+        <div id="view-login" class="hidden text-center py-16">
+            <h1 class="text-4xl font-bold text-gray-900">Relentless Meal Plan Tracker</h1>
+            <p class="text-gray-500 mt-2 mb-8">Sign in to track your meals and sync across devices.</p>
+            <button id="login-btn" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 flex items-center mx-auto">
+                <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                Sign in with Google
+            </button>
         </div>
 
-        <main>
-            <div id="view-tracker">
-                <div class="flex items-center justify-center mb-6">
-                    <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm">
+        <!-- Main App Content -->
+        <div id="app-content" class="hidden">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Relentless Meal Plan Tracker</h1>
+                    <p class="text-gray-500 mt-1">Your daily guide to disciplined eating. Stay focused.</p>
                 </div>
-                <div id="tracker-content" class="space-y-6"></div>
+                <div class="text-xs text-gray-500 mt-4 md:mt-0 text-left md:text-right">
+                    <p><span class="font-semibold">User:</span> <span id="userName"></span></p>
+                    <p><span class="font-semibold">Today:</span> <span id="currentDate"></span></p>
+                    <button id="logout-btn" class="text-indigo-600 hover:underline mt-1">Logout</button>
+                </div>
+            </header>
+
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="flex flex-wrap space-x-4" aria-label="Tabs">
+                    <button id="tab-tracker" class="tab-button active py-4 px-1 border-b-2 font-medium text-sm">Daily Tracker</button>
+                    <button id="tab-dashboard" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Dashboard</button>
+                    <button id="tab-history" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">History</button>
+                    <button id="tab-plan" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Edit Meal Plan</button>
+                    <button id="tab-notes" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Guidelines</button>
+                </nav>
             </div>
-            
-            <div id="view-dashboard" class="hidden">
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-900">Weekly Adherence</h3>
-                        <p class="text-3xl font-bold text-indigo-600 mt-2" id="weekly-adherence-score">0%</p>
-                        <p class="text-sm text-gray-500">Based on checked items this week.</p>
+
+            <main>
+                <div id="view-tracker">
+                    <div class="flex items-center justify-center mb-6">
+                        <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-gray-900">Daily Progress (Last 7 Days)</h3>
-                        <div class="mt-4 h-40">
-                            <canvas id="adherenceChart"></canvas>
+                    <div id="tracker-content" class="space-y-6"></div>
+                </div>
+                
+                <div id="view-dashboard" class="hidden">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900">Weekly Adherence</h3>
+                            <p class="text-3xl font-bold text-indigo-600 mt-2" id="weekly-adherence-score">0%</p>
+                            <p class="text-sm text-gray-500">Based on checked items this week.</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900">Daily Progress (Last 7 Days)</h3>
+                            <div class="mt-4 h-40">
+                                <canvas id="adherenceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow mt-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
+                        <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
+                            <p class="text-gray-500">No comments logged yet.</p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow mt-6">
-                    <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
-                    <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
-                        <p class="text-gray-500">No comments logged yet.</p>
-                    </div>
-                </div>
-            </div>
 
-            <div id="view-history" class="hidden">
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex items-center justify-between mb-4">
-                        <button id="prev-month-btn" class="p-2 rounded-md hover:bg-gray-100">&lt;</button>
-                        <h2 id="calendar-month-year" class="text-xl font-semibold"></h2>
-                        <button id="next-month-btn" class="p-2 rounded-md hover:bg-gray-100">&gt;</button>
-                    </div>
-                    <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden" id="calendar-grid">
-                        <div class="text-center font-semibold text-sm py-2 bg-gray-50">Sun</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Mon</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Tue</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Wed</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Thu</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Fri</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Sat</div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-plan" class="hidden space-y-6"></div>
-            
-            <div id="view-notes" class="hidden">
-                 <div class="bg-white p-6 rounded-lg shadow">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900">Important Guidelines</h3>
-                        <div>
-                            <button id="edit-notes-btn" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Edit</button>
-                            <button id="save-notes-btn" class="hidden text-sm font-semibold text-green-600 hover:text-green-800">Save</button>
-                            <button id="cancel-notes-btn" class="hidden ml-2 text-sm font-semibold text-red-600 hover:text-red-800">Cancel</button>
+                <div id="view-history" class="hidden">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <button id="prev-month-btn" class="p-2 rounded-md hover:bg-gray-100">&lt;</button>
+                            <h2 id="calendar-month-year" class="text-xl font-semibold"></h2>
+                            <button id="next-month-btn" class="p-2 rounded-md hover:bg-gray-100">&gt;</button>
+                        </div>
+                        <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden" id="calendar-grid">
+                            <div class="text-center font-semibold text-sm py-2 bg-gray-50">Sun</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Mon</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Tue</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Wed</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Thu</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Fri</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Sat</div>
                         </div>
                     </div>
-                    <div id="notes-list-container">
-                        <div id="notes-list" class="space-y-3 text-gray-700"></div>
-                        <button id="add-note-btn" class="hidden mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Guideline</button>
+                </div>
+
+                <div id="view-plan" class="hidden space-y-6"></div>
+                
+                <div id="view-notes" class="hidden">
+                     <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Important Guidelines</h3>
+                            <div>
+                                <button id="edit-notes-btn" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">Edit</button>
+                                <button id="save-notes-btn" class="hidden text-sm font-semibold text-green-600 hover:text-green-800">Save</button>
+                                <button id="cancel-notes-btn" class="hidden ml-2 text-sm font-semibold text-red-600 hover:text-red-800">Cancel</button>
+                            </div>
+                        </div>
+                        <div id="notes-list-container">
+                            <div id="notes-list" class="space-y-3 text-gray-700"></div>
+                            <button id="add-note-btn" class="hidden mt-4 text-sm font-semibold text-indigo-600 hover:text-indigo-800">+ Add Guideline</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
         
         <div id="loading-overlay" class="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
@@ -120,25 +134,24 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId, initializeFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBqGygWZLGGfJVeaIooLxtPKNaz2AZlOGk",
-  authDomain: "mealtrackertest2.firebaseapp.com",
-  projectId: "mealtrackertest2",
-  storageBucket: "mealtrackertest2.firebasestorage.app",
-  messagingSenderId: "528697290433",
-  appId: "1:528697290433:web:b284cb980aeff585baee40"
-};
-        
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-meal-tracker';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // IMPORTANT: Replace this with your own Firebase config object!
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqGygWZLGGfJVeaIooLxtPKNaz2AZlOGk",
+            authDomain: "mealtrackertest2.firebaseapp.com",
+            projectId: "mealtrackertest2",
+            storageBucket: "mealtrackertest2.appspot.com",
+            messagingSenderId: "528697290433",
+            appId: "1:528697290433:web:b284cb980aeff585baee40"
+        };
+        const appId = 'default-meal-tracker';
 
         const app = initializeApp(firebaseConfig);
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
         const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
         let userId = null;
         let localTrackingData = {};
@@ -154,7 +167,9 @@ const firebaseConfig = {
         const initialNotes = [ "Daily water intake of 3L", "30 minute walk daily for the first 4 weeks", "All ingredients should be weighed after cooking", "Make sure to use a cooking oil spray can when needed", "Be mindful with sauces and seasoning as they can add up in calories and sodium intake", "No other snacking allowed except the one in the diet plan", "No noodles for the first 4 weeks", "No pork or salmon for the first 4 weeks", "No cheat meals until further notice", "Limit of 2 black coffees a day (no milk)" ];
 
         const loadingOverlay = document.getElementById('loading-overlay');
-        const userIdEl = document.getElementById('userId');
+        const loginView = document.getElementById('view-login');
+        const appContent = document.getElementById('app-content');
+        const userNameEl = document.getElementById('userName');
         const currentDateEl = document.getElementById('currentDate');
         const views = { tracker: document.getElementById('view-tracker'), dashboard: document.getElementById('view-dashboard'), history: document.getElementById('view-history'), plan: document.getElementById('view-plan'), notes: document.getElementById('view-notes') };
         const tabs = { tracker: document.getElementById('tab-tracker'), dashboard: document.getElementById('tab-dashboard'), history: document.getElementById('tab-history'), plan: document.getElementById('tab-plan'), notes: document.getElementById('tab-notes') };
@@ -552,59 +567,53 @@ const firebaseConfig = {
             document.getElementById('prev-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderHistory(); });
             document.getElementById('next-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderHistory(); });
         };
-
-        const showConnectionError = () => {
-            loadingOverlay.classList.add('hidden');
-            const mainContent = document.querySelector('main');
-            mainContent.innerHTML = `
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
-                    <p class="font-bold">Connection Error</p>
-                    <p>Could not connect to the database. This is likely caused by security software (like Avast Web Guard), a browser extension (like an ad blocker), or a network firewall blocking the connection.</p>
-                    <p class="mt-2">Please try disabling these services or using a different network, then do a hard refresh (Ctrl+Shift+R).</p>
-                </div>
-            `;
+        
+        const handleLogin = () => {
+            signInWithPopup(auth, provider).catch(error => {
+                console.error("Google sign-in error", error);
+                alert("Could not sign in with Google. Please try again.");
+            });
         };
 
-        const init = async () => {
-            // Add a timeout to the loading process
-            const loadingTimeout = setTimeout(showConnectionError, 10000); // 10 seconds
+        const handleLogout = () => {
+            signOut(auth);
+        };
 
-            loadingOverlay.classList.remove('hidden');
+        const initAppForUser = async (user) => {
+            userId = user.uid;
+            userNameEl.textContent = user.displayName || 'User';
+            
+            const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
+            const notesDocSnap = await getDoc(notesDocRef);
+            notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
+            
+            await renderTracker();
+            renderNotes();
+            setupEventListeners();
+            
+            loginView.classList.add('hidden');
+            appContent.classList.remove('hidden');
+            loadingOverlay.classList.add('hidden');
+        };
+
+        const init = () => {
             datePicker.value = toISODateString(selectedDate);
             currentDateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-            onAuthStateChanged(auth, async (user) => {
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+            onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    userId = user.uid;
-                    userIdEl.textContent = userId;
-                    
-                    try {
-                        const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
-                        const notesDocSnap = await getDoc(notesDocRef);
-                        notes = notesDocSnap.exists() ? notesDocSnap.data().notes : initialNotes;
-                        
-                        await renderTracker();
-                        renderNotes();
-                        setupEventListeners();
-                        
-                        clearTimeout(loadingTimeout); // Success, so clear the timeout
-                        loadingOverlay.classList.add('hidden');
-                    } catch (error) {
-                        console.error("Firestore initialization failed:", error);
-                        clearTimeout(loadingTimeout);
-                        showConnectionError();
-                    }
+                    initAppForUser(user);
+                } else {
+                    userId = null;
+                    localTrackingData = {};
+                    appContent.classList.add('hidden');
+                    loginView.classList.remove('hidden');
+                    loadingOverlay.classList.add('hidden');
                 }
             });
-
-            try {
-                if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
-                else await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Authentication failed:", error);
-                clearTimeout(loadingTimeout);
-                showConnectionError();
-            }
         };
 
         init();
