@@ -508,7 +508,7 @@
 
                 const futureTrackingQuery = query(
                     collection(db, `artifacts/${appId}/users/${userId}/tracking`),
-                    where(documentId(), ">", dateStr)
+                    where(documentId(), ">=", dateStr)
                 );
                 const futureDocsSnapshot = await getDocs(futureTrackingQuery);
                 futureDocsSnapshot.forEach(doc => {
@@ -520,13 +520,10 @@
                 mealOrder = newMealOrder;
                 
                 Object.keys(localTrackingData).forEach(keyDate => {
-                    if (keyDate > dateStr) {
+                    if (keyDate >= dateStr) {
                         delete localTrackingData[keyDate];
                     }
                 });
-
-                // LOGIC FIX: Force-update the current day's tracker after saving
-                delete localTrackingData[dateStr];
 
                 alert('Meal plan updated successfully. It will apply from the selected date forward.');
                 await renderTracker();
