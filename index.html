@@ -270,7 +270,6 @@
         
         const renderPlanEditor = async () => {
             views.plan.innerHTML = '<div class="text-center p-4">Loading plan...</div>';
-            // LOGIC FIX: Always edit the plan based on the CURRENT date, not the selected one.
             const todayStr = toISODateString(new Date());
             const currentPlan = await getPlanForDate(todayStr);
             views.plan.innerHTML = '';
@@ -483,7 +482,6 @@
             button.disabled = true;
             button.textContent = 'Saving...';
 
-            // LOGIC FIX: The new plan is always effective from TODAY.
             const effectiveDateStr = toISODateString(new Date());
             const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, effectiveDateStr);
             const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
