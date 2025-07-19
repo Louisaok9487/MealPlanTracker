@@ -270,8 +270,9 @@
         
         const renderPlanEditor = async () => {
             views.plan.innerHTML = '<div class="text-center p-4">Loading plan...</div>';
-            const dateStr = toISODateString(selectedDate);
-            const currentPlan = await getPlanForDate(dateStr);
+            // LOGIC FIX: Always edit the plan based on the CURRENT date, not the selected one.
+            const todayStr = toISODateString(new Date());
+            const currentPlan = await getPlanForDate(todayStr);
             views.plan.innerHTML = '';
             
             mealOrder.forEach(mealName => {
@@ -482,8 +483,9 @@
             button.disabled = true;
             button.textContent = 'Saving...';
 
-            const dateStr = toISODateString(selectedDate);
-            const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, dateStr);
+            // LOGIC FIX: The new plan is always effective from TODAY.
+            const effectiveDateStr = toISODateString(new Date());
+            const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, effectiveDateStr);
             const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
             
             const newPlan = {};
@@ -503,12 +505,12 @@
 
             try {
                 const batch = writeBatch(db);
-                batch.set(planDocRef, { plan: newPlan, effectiveDate: dateStr });
+                batch.set(planDocRef, { plan: newPlan, effectiveDate: effectiveDateStr });
                 batch.set(mealOrderRef, { order: newMealOrder });
 
                 const futureTrackingQuery = query(
                     collection(db, `artifacts/${appId}/users/${userId}/tracking`),
-                    where(documentId(), ">=", dateStr)
+                    where(documentId(), ">=", effectiveDateStr)
                 );
                 const futureDocsSnapshot = await getDocs(futureTrackingQuery);
                 futureDocsSnapshot.forEach(doc => {
@@ -520,12 +522,12 @@
                 mealOrder = newMealOrder;
                 
                 Object.keys(localTrackingData).forEach(keyDate => {
-                    if (keyDate >= dateStr) {
+                    if (keyDate >= effectiveDateStr) {
                         delete localTrackingData[keyDate];
                     }
                 });
 
-                alert('Meal plan updated successfully. It will apply from the selected date forward.');
+                alert('Meal plan updated successfully. It will apply from today forward.');
                 await renderTracker();
             } catch (error) {
                 console.error("Error saving meal plan:", error);
