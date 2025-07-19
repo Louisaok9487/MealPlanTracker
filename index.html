@@ -10,6 +10,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         .tab-button.active { border-bottom-color: #4f46e5; color: #4f46e5; font-weight: 600; }
+        .checkbox-custom:checked + .checkbox-label { background-color: #4f46e5; border-color: #4f46e5; }
         .checkbox-custom:checked + .checkbox-label .checkbox-icon { display: block; }
         .calendar-day { min-height: 6rem; transition: background-color 0.2s; }
         .calendar-day:hover { background-color: #f0f0f0; }
@@ -36,8 +37,9 @@
         </header>
 
         <div class="border-b border-gray-200 mb-6">
-            <nav class="flex space-x-4" aria-label="Tabs">
+            <nav class="flex flex-wrap space-x-4" aria-label="Tabs">
                 <button id="tab-tracker" class="tab-button active py-4 px-1 border-b-2 font-medium text-sm">Daily Tracker</button>
+                <button id="tab-dashboard" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Dashboard</button>
                 <button id="tab-history" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">History</button>
                 <button id="tab-plan" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Edit Meal Plan</button>
                 <button id="tab-notes" class="tab-button py-4 px-1 border-b-2 font-medium text-sm">Guidelines</button>
@@ -51,6 +53,28 @@
                 </div>
                 <div id="tracker-content" class="space-y-6"></div>
             </div>
+            
+            <div id="view-dashboard" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-gray-900">Weekly Adherence</h3>
+                        <p class="text-3xl font-bold text-indigo-600 mt-2" id="weekly-adherence-score">0%</p>
+                        <p class="text-sm text-gray-500">Based on checked items this week.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-gray-900">Daily Progress (Last 7 Days)</h3>
+                        <div class="mt-4 h-40">
+                            <canvas id="adherenceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
+                    <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
+                        <p class="text-gray-500">No comments logged yet.</p>
+                    </div>
+                </div>
+            </div>
 
             <div id="view-history" class="hidden">
                 <div class="bg-white p-6 rounded-lg shadow">
@@ -63,7 +87,6 @@
                         <div class="text-center font-semibold text-sm py-2 bg-gray-50">Sun</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Mon</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Tue</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Wed</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Thu</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Fri</div><div class="text-center font-semibold text-sm py-2 bg-gray-50">Sat</div>
                     </div>
                 </div>
-                <div id="dashboard-section" class="mt-6"></div>
             </div>
 
             <div id="view-plan" class="hidden space-y-6"></div>
@@ -107,9 +130,11 @@
         let userId = null;
         let localTrackingData = {};
         let notes = [];
+        let tempNotes = [];
         let isEditingNotes = false;
         let selectedDate = new Date();
         let calendarDate = new Date();
+        let chartInstance = null;
         const mealOrder = ["Meal 1", "Meal 2", "Meal 3", "Meal 4", "Snack"];
         
         const initialMealPlan = { "Meal 1": [ { id: "item1", name: "4 whole eggs" }, { id: "item2", name: "4 slices of wholemeal bread" }, { id: "item3", name: "Black coffee" } ], "Meal 2": [ { id: "item4", name: "250g white rice" }, { id: "item5", name: "170g of chicken/white fish/lean beef" }, { id: "item6", name: "100g mixed vegetables" } ], "Meal 3": [ { id: "item7", name: "50g Oats" }, { id: "item8", name: "1 banana" }, { id: "item9", name: "1 scoop of whey isolate protein" }, { id: "item10", name: "100g mixed berries" } ], "Meal 4": [ { id: "item11", name: "250g white rice" }, { id: "item12", name: "170g of chicken/white fish/lean beef" }, { id: "item13", name: "100g mixed vegetables" } ], "Snack": [ { id: "item14", name: "1 Banana" }, { id: "item15", name: "High protein bar (Musashi with 45g protein)" } ] };
@@ -118,8 +143,8 @@
         const loadingOverlay = document.getElementById('loading-overlay');
         const userIdEl = document.getElementById('userId');
         const currentDateEl = document.getElementById('currentDate');
-        const views = { tracker: document.getElementById('view-tracker'), history: document.getElementById('view-history'), plan: document.getElementById('view-plan'), notes: document.getElementById('view-notes') };
-        const tabs = { tracker: document.getElementById('tab-tracker'), history: document.getElementById('tab-history'), plan: document.getElementById('tab-plan'), notes: document.getElementById('tab-notes') };
+        const views = { tracker: document.getElementById('view-tracker'), dashboard: document.getElementById('view-dashboard'), history: document.getElementById('view-history'), plan: document.getElementById('view-plan'), notes: document.getElementById('view-notes') };
+        const tabs = { tracker: document.getElementById('tab-tracker'), dashboard: document.getElementById('tab-dashboard'), history: document.getElementById('tab-history'), plan: document.getElementById('tab-plan'), notes: document.getElementById('tab-notes') };
         const datePicker = document.getElementById('date-picker');
         const trackerContent = document.getElementById('tracker-content');
         const notesListEl = document.getElementById('notes-list');
@@ -174,7 +199,7 @@
                     <div class="flex items-start space-x-4 py-2 border-b border-gray-100 last:border-b-0">
                         <div class="flex-shrink-0 pt-1">
                              <input type="checkbox" id="check-${item.id}-${dateStr}" data-meal="${mealName}" data-item-id="${item.id}" class="checkbox-custom hidden" ${item.done ? 'checked' : ''}>
-                             <label for="check-${item.id}-${dateStr}" class="checkbox-label w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center cursor-pointer"><svg class="checkbox-icon hidden w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></label>
+                             <label for="check-${item.id}-${dateStr}" class="checkbox-label w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center cursor-pointer transition-colors"><svg class="checkbox-icon hidden w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></label>
                         </div>
                         <div class="flex-grow">
                             <p class="font-medium text-gray-800">${item.name}</p>
@@ -184,6 +209,19 @@
 
                 mealCard.innerHTML = `<h3 class="text-xl font-semibold text-gray-800 mb-4">${mealName}</h3><div class="space-y-2">${itemsHtml}</div>`;
                 trackerContent.appendChild(mealCard);
+            });
+            // Manually re-apply checkbox styles after render
+            Object.values(dailyData).forEach(mealItems => {
+                if (Array.isArray(mealItems)) {
+                    mealItems.forEach(item => {
+                        if (item.done) {
+                            const label = document.querySelector(`label[for="check-${item.id}-${dateStr}"]`);
+                            if (label) {
+                                label.classList.add('bg-indigo-600', 'border-indigo-600');
+                            }
+                        }
+                    });
+                }
             });
         };
         
@@ -211,12 +249,83 @@
             saveNotesBtn.classList.toggle('hidden', !isEditingNotes);
             cancelNotesBtn.classList.toggle('hidden', !isEditingNotes);
             addNoteBtn.classList.toggle('hidden', !isEditingNotes);
-
-            if (isEditingNotes) {
-                notesListEl.innerHTML = notes.map((note, index) => `<div class="flex items-center space-x-2"><input type="text" value="${note}" placeholder="New guideline..." data-index="${index}" class="note-input flex-grow p-2 border rounded-md"><button data-index="${index}" class="remove-note-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`).join('');
-            } else {
-                notesListEl.innerHTML = notes.map(note => `<li class="flex items-start"><svg class="flex-shrink-0 h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>${note}</span></li>`).join('');
+            
+            const sourceNotes = isEditingNotes ? tempNotes : notes;
+            notesListEl.innerHTML = sourceNotes.map((note, index) => {
+                if(isEditingNotes) {
+                    return `<div class="flex items-center space-x-2"><input type="text" value="${note}" placeholder="New guideline..." data-index="${index}" class="note-input flex-grow p-2 border rounded-md"><button data-index="${index}" class="remove-note-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`;
+                }
+                return `<li class="flex items-start"><svg class="flex-shrink-0 h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>${note}</span></li>`;
+            }).join('');
+        };
+        
+        const renderDashboard = async () => {
+            const today = new Date();
+            const weeklyData = [];
+            let totalItems = 0;
+            let completedItems = 0;
+            const comments = [];
+            
+            const promises = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = toISODateString(date);
+                
+                if (!localTrackingData[dateStr]) {
+                    const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
+                    promises.push(getDoc(docRef));
+                }
             }
+
+            const docSnaps = await Promise.all(promises);
+            docSnaps.forEach(docSnap => {
+                if (docSnap.exists()) {
+                    localTrackingData[docSnap.id] = docSnap.data();
+                }
+            });
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = toISODateString(date);
+                const dayData = localTrackingData[dateStr];
+
+                let dayTotal = 0, dayCompleted = 0;
+                if (dayData) {
+                    Object.entries(dayData).forEach(([mealName, mealItems]) => {
+                        if(Array.isArray(mealItems)) {
+                            dayTotal += mealItems.length;
+                            mealItems.forEach(item => { 
+                                if (item.done) dayCompleted++; 
+                                if (item.comment) comments.push({ date: dateStr, meal: mealName, item: item.name, comment: item.comment });
+                            });
+                        }
+                    });
+                }
+                
+                totalItems += dayTotal;
+                completedItems += dayCompleted;
+                weeklyData.push({ date: date.toLocaleDateString('en-US', { weekday: 'short' }), adherence: dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0 });
+            }
+
+            const weeklyAdherence = totalItems > 0 ? ((completedItems / totalItems) * 100).toFixed(0) : 0;
+            document.getElementById('weekly-adherence-score').textContent = `${weeklyAdherence}%`;
+            
+            const commentsLog = document.getElementById('comments-log');
+            if (comments.length > 0) {
+                commentsLog.innerHTML = comments.reverse().map(c => `<div class="p-2 bg-gray-50 rounded-md"><p class="text-sm text-gray-700"><strong>${c.item}:</strong> ${c.comment}</p><p class="text-xs text-gray-400">${c.date} (${c.meal})</p></div>`).join('');
+            } else {
+                commentsLog.innerHTML = '<p class="text-gray-500">No comments logged in the last 7 days.</p>';
+            }
+
+            const ctx = document.getElementById('adherenceChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: weeklyData.map(d => d.date), datasets: [{ label: 'Adherence %', data: weeklyData.map(d => d.adherence), backgroundColor: 'rgba(79, 70, 229, 0.8)', borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `Adherence: ${context.raw.toFixed(1)}%` } } } }
+            });
         };
 
         const renderHistory = async () => {
@@ -240,31 +349,29 @@
 
             for (let i = 0; i < firstDayOfMonth.getDay(); i++) { calendarGrid.insertAdjacentHTML('beforeend', `<div class="bg-gray-50"></div>`); }
 
-            let totalAdherence = 0, daysWithData = 0;
             for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
                 const date = new Date(year, month, day);
                 const dateStr = toISODateString(date);
                 const dayData = monthData[dateStr];
                 
-                let adherenceClass = 'adherence-none', adherenceText = 'No Data', percentage = 0;
+                let adherenceClass = 'adherence-none', adherenceText = 'No Data';
                 if (dayData) {
                     let total = 0, done = 0;
-                    Object.values(dayData).forEach(meal => meal.forEach(item => { total++; if(item.done) done++; }));
-                    percentage = total > 0 ? (done / total) * 100 : 0;
+                    Object.values(dayData).forEach(meal => {
+                        if (Array.isArray(meal)) {
+                            meal.forEach(item => { total++; if(item.done) done++; });
+                        }
+                    });
+                    const percentage = total > 0 ? (done / total) * 100 : 0;
                     adherenceText = `${Math.round(percentage)}%`;
                     if (percentage >= 90) adherenceClass = 'adherence-high';
                     else if (percentage >= 50) adherenceClass = 'adherence-medium';
                     else adherenceClass = 'adherence-low';
-                    totalAdherence += percentage;
-                    daysWithData++;
                 }
                 
                 const todayClass = toISODateString(new Date()) === dateStr ? 'today-highlight' : '';
                 calendarGrid.insertAdjacentHTML('beforeend', `<div class="calendar-day relative p-2 border-t border-l ${adherenceClass} ${todayClass}"><div class="font-semibold text-sm">${day}</div><div class="text-xs mt-1">${adherenceText}</div></div>`);
             }
-            
-            const avgAdherence = daysWithData > 0 ? (totalAdherence / daysWithData).toFixed(0) : 0;
-            document.getElementById('dashboard-section').innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><h3 class="text-lg font-semibold">Monthly Average Adherence</h3><p class="text-3xl font-bold text-indigo-600 mt-2">${avgAdherence}%</p></div>`;
         };
 
         const updateFirestoreTracking = async (mealName, itemId, property, value) => {
@@ -283,27 +390,46 @@
             }
             localTrackingData[dateStr] = dayData;
             await setDoc(docRef, dayData);
-            renderTracker();
+            
+            const label = document.querySelector(`label[for="check-${itemId}-${dateStr}"]`);
+            if (label) {
+                label.classList.toggle('bg-indigo-600', value);
+                label.classList.toggle('border-indigo-600', value);
+                const commentSection = label.closest('.flex.items-start').querySelector('.comment-section');
+                if (commentSection) commentSection.classList.toggle('hidden', value);
+            }
         };
         
-        const saveMealPlan = async () => {
+        const saveMealPlan = async (button) => {
+            button.disabled = true;
+            button.textContent = 'Saving...';
+
             const dateStr = toISODateString(selectedDate);
             const docRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, dateStr);
             
             const newPlan = {};
-            document.querySelectorAll('#view-plan .meal-editor-items').forEach(container => {
-                const mealName = container.nextElementSibling.dataset.meal;
-                newPlan[mealName] = [];
-                container.querySelectorAll('.plan-item-input').forEach(input => {
-                    if (input.value) {
-                        newPlan[mealName].push({ id: input.dataset.itemId, name: input.value });
-                    }
-                });
+            mealOrder.forEach(mealName => { newPlan[mealName] = []; });
+
+            document.querySelectorAll('#view-plan .plan-item-input').forEach(input => {
+                const mealName = input.dataset.meal;
+                if (input.value && newPlan[mealName]) {
+                    newPlan[mealName].push({ id: input.dataset.itemId, name: input.value });
+                }
             });
 
-            await setDoc(docRef, { plan: newPlan, effectiveDate: dateStr });
-            alert('Meal plan updated successfully. This will apply from the selected date forward.');
-            await renderPlanEditor();
+            try {
+                await setDoc(docRef, { plan: newPlan, effectiveDate: dateStr });
+                alert('Meal plan updated successfully. This will apply from the selected date forward.');
+                // Clear cache to force reload of plans and tracking data
+                localTrackingData = {}; 
+                await renderTracker();
+            } catch (error) {
+                console.error("Error saving meal plan:", error);
+                alert("Could not save meal plan. Please try again.");
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Save Meal Plan';
+            }
         };
 
         const setupEventListeners = () => {
@@ -312,6 +438,7 @@
                 e.target.classList.add('active');
                 Object.values(views).forEach(v => v.classList.add('hidden'));
                 views[key].classList.remove('hidden');
+                if (key === 'dashboard') renderDashboard();
                 if (key === 'history') renderHistory();
                 if (key === 'plan') renderPlanEditor();
             }));
@@ -331,21 +458,43 @@
                     container.insertAdjacentHTML('beforeend', `<div class="flex items-center space-x-2 mb-2"><input type="text" value="" placeholder="New Food Item..." data-meal="${mealName}" data-item-id="item${Date.now()}" class="plan-item-input flex-grow p-2 border rounded-md"><button data-meal="${mealName}" class="remove-item-btn p-2 text-red-500 hover:bg-red-100 rounded-md">&times;</button></div>`);
                 }
                 if (removeBtn) { removeBtn.parentElement.remove(); }
-                if (saveBtn) { saveMealPlan(); }
+                if (saveBtn) { saveMealPlan(saveBtn); }
             });
 
-            editNotesBtn.addEventListener('click', () => { isEditingNotes = true; renderNotes(); });
-            cancelNotesBtn.addEventListener('click', () => { isEditingNotes = false; renderNotes(); });
+            editNotesBtn.addEventListener('click', () => { 
+                tempNotes = [...notes];
+                isEditingNotes = true; 
+                renderNotes(); 
+            });
+            cancelNotesBtn.addEventListener('click', () => { 
+                isEditingNotes = false; 
+                renderNotes(); 
+            });
             saveNotesBtn.addEventListener('click', async () => {
                 isEditingNotes = false;
-                const newNotes = Array.from(document.querySelectorAll('.note-input')).map(i => i.value).filter(n => n.trim());
-                notes = newNotes;
+                notes = [...tempNotes];
                 const docRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
                 await setDoc(docRef, { notes: notes });
                 renderNotes();
             });
-            addNoteBtn.addEventListener('click', () => { notes.push(""); renderNotes(); });
-            notesListEl.addEventListener('click', e => { if (e.target.closest('.remove-note-btn')) { e.target.closest('.remove-note-btn').parentElement.remove(); } });
+            addNoteBtn.addEventListener('click', () => { 
+                tempNotes.push(""); 
+                renderNotes(); 
+            });
+            notesListEl.addEventListener('click', e => { 
+                const removeBtn = e.target.closest('.remove-note-btn');
+                if (removeBtn) {
+                    const index = parseInt(removeBtn.dataset.index, 10);
+                    tempNotes.splice(index, 1);
+                    renderNotes();
+                }
+            });
+            notesListEl.addEventListener('change', e => {
+                if(e.target.matches('.note-input')) {
+                    const index = parseInt(e.target.dataset.index, 10);
+                    tempNotes[index] = e.target.value;
+                }
+            });
             
             document.getElementById('prev-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() - 1); renderHistory(); });
             document.getElementById('next-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderHistory(); });
