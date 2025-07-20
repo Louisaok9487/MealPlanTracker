@@ -187,8 +187,6 @@
             return `${year}-${month}-${day}`;
         };
 
-        // BUG FIX: The original function could fail if the most recent plan was a 'single-day' plan.
-        // This new version correctly searches past any irrelevant single-day plans to find the correct base plan.
         const getPlanForDate = async (dateStr) => {
             // 1. Check for a single-day override for the specific date. This takes highest priority.
             const singleDayDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${dateStr}-single`);
@@ -536,6 +534,9 @@
             }
         };
         
+        // BUG FIX: Rewrote this function to be more robust and avoid race conditions.
+        // Instead of deleting and relying on a re-fetch for the current day, it now
+        // explicitly SETS the tracking data for today and deletes only future tracking docs.
         const saveMealPlan = async (button) => {
             button.disabled = true;
             button.textContent = 'Saving...';
@@ -560,8 +561,10 @@
 
             try {
                 const batch = writeBatch(db);
+                const newPlanWithDefaults = clonePlanWithDefaults(newPlan);
                 
                 if (applyOption === 'today-only') {
+                    // Save the single-day override plan document
                     const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, `${todayStr}-single`);
                     batch.set(planDocRef, { 
                         plan: newPlan, 
@@ -570,30 +573,41 @@
                         type: 'single-day'
                     });
                     
+                    // Explicitly set today's tracking doc with this new plan
                     const todayTrackingRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr);
-                    batch.delete(todayTrackingRef);
-                    delete localTrackingData[todayStr];
+                    batch.set(todayTrackingRef, newPlanWithDefaults);
+
+                    // Update local cache for today
+                    localTrackingData[todayStr] = newPlanWithDefaults;
 
                 } else { // today-forward
+                    // Save the new "template" plan for future lookups
                     const planDocRef = doc(db, `artifacts/${appId}/users/${userId}/mealPlans`, todayStr);
-                    const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
-                    
                     batch.set(planDocRef, { plan: newPlan, effectiveDate: todayStr });
+
+                    // Save the new meal order
+                    const mealOrderRef = doc(db, `artifacts/${appId}/users/${userId}/data/mealOrder`);
                     batch.set(mealOrderRef, { order: newMealOrder });
 
+                    // Explicitly overwrite today's tracking document with the new plan.
+                    const todayTrackingRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, todayStr);
+                    batch.set(todayTrackingRef, newPlanWithDefaults);
+
+                    // Delete tracking documents for all dates AFTER today.
                     const futureTrackingQuery = query(
                         collection(db, `artifacts/${appId}/users/${userId}/tracking`),
-                        where(documentId(), ">=", todayStr)
+                        where(documentId(), ">", todayStr)
                     );
                     const futureDocsSnapshot = await getDocs(futureTrackingQuery);
                     futureDocsSnapshot.forEach(doc => {
                         batch.delete(doc.ref);
                     });
                     
+                    // Update local state to match
                     mealOrder = newMealOrder;
-                    
+                    localTrackingData[todayStr] = newPlanWithDefaults; // Set today's local data
                     Object.keys(localTrackingData).forEach(keyDate => {
-                        if (keyDate >= todayStr) {
+                        if (keyDate > todayStr) { // Delete future local data
                             delete localTrackingData[keyDate];
                         }
                     });
@@ -605,7 +619,10 @@
                     ? 'Custom meal plan created for today only!'
                     : 'Meal plan updated for today and all future days!';
                     
-                alert(successMessage);
+                // Using a simple browser alert for now. A custom modal would be better.
+                alert(successMessage); 
+                
+                // After saving, re-render the current day's tracker to show the changes immediately.
                 await renderTracker();
                 
             } catch (error) {
