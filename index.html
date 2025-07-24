@@ -23,6 +23,28 @@
         .adherence-low { background-color: #fee2e2; } /* red-100 */
         .adherence-none { background-color: #f3f4f6; } /* gray-100 */
         .today-highlight { box-shadow: 0 0 0 2px #4f46e5; z-index: 1; }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -33,10 +55,30 @@
         <div id="view-login" class="hidden text-center py-16">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Relentless Meal Plan Tracker</h1>
             <p class="text-gray-500 mt-2 mb-8">Sign in to track your meals and sync across devices.</p>
-            <button id="login-btn" class="bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 flex items-center mx-auto">
-                <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
-                Sign in with Google
-            </button>
+            <div class="space-y-4 max-w-sm mx-auto">
+                <button id="login-google-btn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 flex items-center justify-center">
+                    <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,30.651,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+                    Sign in with Google
+                </button>
+                <button id="login-email-btn" class="w-full bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 flex items-center justify-center">
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Sign in with Email
+                </button>
+            </div>
+        </div>
+
+        <!-- Email Login/Registration Modal -->
+        <div id="email-auth-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 class="text-2xl font-bold mb-4 text-gray-900" id="email-modal-title">Sign In / Register with Email</h2>
+                <input type="email" id="email-input" placeholder="Email" class="w-full p-3 border border-gray-300 rounded-md mb-3">
+                <input type="password" id="password-input" placeholder="Password" class="w-full p-3 border border-gray-300 rounded-md mb-4">
+                <button id="email-sign-in-btn" class="w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 mb-2">Sign In</button>
+                <button id="email-register-btn" class="w-full bg-gray-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-600 mb-4">Register</button>
+                <button id="forgot-password-btn" class="w-full text-sm text-indigo-600 hover:underline mb-4">Forgot Password?</button>
+                <button id="email-modal-close-btn" class="w-full text-gray-600 hover:text-gray-800">Cancel</button>
+                <p id="email-auth-error" class="text-red-500 text-sm mt-3 hidden"></p>
+            </div>
         </div>
 
         <!-- Main App Content -->
@@ -85,6 +127,34 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- New Dashboard Sections -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900">Current Adherence Streak</h3>
+                            <p class="text-3xl font-bold text-green-600 mt-2" id="current-streak">0 days</p>
+                            <p class="text-sm text-gray-500">Consecutive days with 80%+ adherence.</p>
+                        </div>
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900">Weekly Goal (80%+)</h3>
+                            <p class="text-3xl font-bold text-purple-600 mt-2" id="weekly-goal-status">0%</p>
+                            <div id="weekly-goal-award" class="text-4xl mt-2"></div>
+                            <p class="text-sm text-gray-500">Average adherence for the current week.</p>
+                        </div>
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold text-gray-900">Monthly Goal (80%+)</h3>
+                            <p class="text-3xl font-bold text-purple-600 mt-2" id="monthly-goal-status">0%</p>
+                            <div id="monthly-goal-award" class="text-4xl mt-2"></div>
+                            <p class="text-sm text-gray-500">Average adherence for the current month.</p>
+                        </div>
+                        <div class="bg-white p-4 sm:p-6 rounded-lg shadow col-span-1 md:col-span-2 lg:col-span-3">
+                            <h3 class="text-lg font-semibold text-gray-900">Quarterly Goal (80%+)</h3>
+                            <p class="text-3xl font-bold text-purple-600 mt-2" id="quarterly-goal-status">0%</p>
+                            <div id="quarterly-goal-award" class="text-4xl mt-2"></div>
+                            <p class="text-sm text-gray-500">Average adherence for the last 90 days.</p>
+                        </div>
+                    </div>
+
                     <div class="bg-white p-4 sm:p-6 rounded-lg shadow mt-4">
                         <h3 class="text-lg font-semibold text-gray-900">Recent Comments & Deviations</h3>
                         <div id="comments-log" class="mt-4 space-y-3 max-h-60 overflow-y-auto">
@@ -134,9 +204,19 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signOut,
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword,
+            sendPasswordResetEmail
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, query, getDocs, where, writeBatch, orderBy, limit, documentId, initializeFirestore, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // IMPORTANT: Replace with your actual Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBqGygWZLGGfJVeaIooLxtPKNaz2AZlOGk",
             authDomain: "mealtrackertest2.firebaseapp.com",
@@ -145,12 +225,15 @@
             messagingSenderId: "528697290433",
             appId: "1:528697290433:web:b284cb980aeff585baee40"
         };
-        const appId = 'default-meal-tracker';
+        // Use the global __app_id if available, otherwise fallback to a default
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-meal-tracker';
 
         const app = initializeApp(firebaseConfig);
         const db = initializeFirestore(app, { experimentalForceLongPolling: true });
         const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+
+        // Providers
+        const googleProvider = new GoogleAuthProvider();
 
         let userId = null;
         let localTrackingData = {};
@@ -179,6 +262,29 @@
         const saveNotesBtn = document.getElementById('save-notes-btn');
         const cancelNotesBtn = document.getElementById('cancel-notes-btn');
         const addNoteBtn = document.getElementById('add-note-btn');
+
+        // Email/Password Modal Elements
+        const emailAuthModal = document.getElementById('email-auth-modal');
+        const emailModalTitle = document.getElementById('email-modal-title');
+        const emailInput = document.getElementById('email-input');
+        const passwordInput = document.getElementById('password-input');
+        const emailSignInBtn = document.getElementById('email-sign-in-btn');
+        const emailRegisterBtn = document.getElementById('email-register-btn');
+        const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+        const emailModalCloseBtn = document.getElementById('email-modal-close-btn');
+        const emailAuthError = document.getElementById('email-auth-error');
+
+        // Dashboard new elements
+        const currentStreakEl = document.getElementById('current-streak');
+        const weeklyGoalStatusEl = document.getElementById('weekly-goal-status');
+        const weeklyGoalAwardEl = document.getElementById('weekly-goal-award');
+        const monthlyGoalStatusEl = document.getElementById('monthly-goal-status');
+        const monthlyGoalAwardEl = document.getElementById('monthly-goal-award');
+        const quarterlyGoalStatusEl = document.getElementById('quarterly-goal-status');
+        const quarterlyGoalAwardEl = document.getElementById('quarterly-goal-award');
+
+        // Goal thresholds (can be made configurable later if needed)
+        const ADHERENCE_GOAL_THRESHOLD = 80; // 80% adherence for a day to count towards streak/goals
 
         const toISODateString = (date) => {
             const year = date.getFullYear();
@@ -376,40 +482,34 @@
             const weeklyData = [];
             const comments = [];
             
-            const promises = [];
-            for (let i = 6; i >= 0; i--) {
+            // Fetch data for the last 90 days for comprehensive analytics
+            const daysToFetch = 90; 
+            const recentDates = [];
+            for (let i = 0; i < daysToFetch; i++) {
                 const date = new Date(today);
                 date.setDate(today.getDate() - i);
-                const dateStr = toISODateString(date);
-                
+                recentDates.push(toISODateString(date));
+            }
+
+            const promises = recentDates.map(dateStr => {
                 if (!localTrackingData[dateStr]) {
                     const docRef = doc(db, `artifacts/${appId}/users/${userId}/tracking`, dateStr);
-                    promises.push(getDoc(docRef));
+                    return getDoc(docRef);
                 }
-            }
+                return Promise.resolve(null); // Already in cache
+            });
 
             const docSnaps = await Promise.all(promises);
             docSnaps.forEach(docSnap => {
-                if (docSnap.exists()) {
+                if (docSnap && docSnap.exists()) {
                     localTrackingData[docSnap.id] = docSnap.data();
                 }
             });
-            
-            const selectedDayStr = toISODateString(selectedDate);
-            const selectedDayData = localTrackingData[selectedDayStr];
-            let dailyTotal = 0, dailyCompleted = 0;
-            if (selectedDayData) {
-                Object.values(selectedDayData).forEach(meal => {
-                    if(Array.isArray(meal)) {
-                        dailyTotal += meal.length;
-                        meal.forEach(item => { if (item.done) dailyCompleted++; });
-                    }
-                });
-            }
-            const dailyAdherence = dailyTotal > 0 ? ((dailyCompleted / dailyTotal) * 100).toFixed(0) : 0;
-            document.getElementById('daily-adherence-score').textContent = `${dailyAdherence}%`;
 
-            for (let i = 6; i >= 0; i--) {
+            const dailyAdherenceScores = {}; // Store adherence for streak/goal calculations
+            
+            // Populate weeklyData and comments, and calculate daily adherence scores
+            for (let i = 6; i >= 0; i--) { // Still only show last 7 days for the chart
                 const date = new Date(today);
                 date.setDate(today.getDate() - i);
                 const dateStr = toISODateString(date);
@@ -427,9 +527,37 @@
                         }
                     });
                 }
-                weeklyData.push({ date: date.toLocaleDateString('en-US', { weekday: 'short' }), adherence: dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0 });
+                const percentage = dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0;
+                weeklyData.push({ date: date.toLocaleDateString('en-US', { weekday: 'short' }), adherence: percentage });
+                dailyAdherenceScores[dateStr] = percentage;
             }
             
+            // Calculate daily adherence for all fetched days (up to 90)
+            const allDailyAdherence = [];
+            for (let i = 0; i < daysToFetch; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = toISODateString(date);
+                const dayData = localTrackingData[dateStr];
+
+                let dayTotal = 0, dayCompleted = 0;
+                if (dayData) {
+                    Object.values(dayData).forEach(meal => {
+                        if (Array.isArray(meal)) {
+                            dayTotal += meal.length;
+                            meal.forEach(item => { if (item.done) dayCompleted++; });
+                        }
+                    });
+                }
+                allDailyAdherence.push({ date: dateStr, adherence: dayTotal > 0 ? (dayCompleted / dayTotal) * 100 : 0 });
+            }
+
+            // --- Update Daily Adherence Score ---
+            const selectedDayStr = toISODateString(selectedDate);
+            const dailyAdherence = dailyAdherenceScores[selectedDayStr] !== undefined ? dailyAdherenceScores[selectedDayStr].toFixed(0) : 0;
+            document.getElementById('daily-adherence-score').textContent = `${dailyAdherence}%`;
+
+            // --- Render Comments Log ---
             const commentsLog = document.getElementById('comments-log');
             if (comments.length > 0) {
                 commentsLog.innerHTML = comments.reverse().map(c => `<div class="p-2 bg-gray-50 rounded-md"><p class="text-sm text-gray-700"><strong>${c.item}:</strong> ${c.comment}</p><p class="text-xs text-gray-400">${c.date} (${c.meal})</p></div>`).join('');
@@ -437,6 +565,7 @@
                 commentsLog.innerHTML = '<p class="text-gray-500">No comments logged in the last 7 days.</p>';
             }
 
+            // --- Render Adherence Chart (last 7 days) ---
             const ctx = document.getElementById('adherenceChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
             chartInstance = new Chart(ctx, {
@@ -444,6 +573,57 @@
                 data: { labels: weeklyData.map(d => d.date), datasets: [{ label: 'Adherence %', data: weeklyData.map(d => d.adherence), backgroundColor: 'rgba(79, 70, 229, 0.8)', borderRadius: 4 }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: context => `Adherence: ${context.raw.toFixed(1)}%` } } } }
             });
+
+            // --- Calculate and Display Streak ---
+            let currentStreak = 0;
+            for (let i = 0; i < allDailyAdherence.length; i++) {
+                // Streak only counts if data exists for the day and meets threshold
+                if (allDailyAdherence[i].adherence >= ADHERENCE_GOAL_THRESHOLD) {
+                    currentStreak++;
+                } else {
+                    // If today's data is missing or below threshold, the streak ends.
+                    // If it's an older day, it just breaks the streak.
+                    if (i === 0 && allDailyAdherence[i].adherence < ADHERENCE_GOAL_THRESHOLD) {
+                        currentStreak = 0; // If today is below threshold, streak is 0
+                    }
+                    break; 
+                }
+            }
+            currentStreakEl.textContent = `${currentStreak} days`;
+
+            // --- Calculate and Display Goals ---
+            const calculateAverageAdherence = (days) => {
+                const relevantDays = allDailyAdherence.slice(0, days);
+                if (relevantDays.length === 0) return 0;
+                const totalAdherence = relevantDays.reduce((sum, day) => sum + day.adherence, 0);
+                return totalAdherence / relevantDays.length;
+            };
+
+            const updateGoalDisplay = (element, awardElement, average, periodName) => {
+                const percentage = average.toFixed(0);
+                element.textContent = `${percentage}%`;
+                if (average >= ADHERENCE_GOAL_THRESHOLD) {
+                    element.classList.remove('text-purple-600');
+                    element.classList.add('text-green-600');
+                    awardElement.textContent = '🏆'; // Trophy emoji for achievement
+                } else {
+                    element.classList.remove('text-green-600');
+                    element.classList.add('text-purple-600');
+                    awardElement.textContent = ''; // Clear emoji if not achieved
+                }
+            };
+
+            // Weekly Goal (last 7 days including today)
+            const weeklyAvg = calculateAverageAdherence(7);
+            updateGoalDisplay(weeklyGoalStatusEl, weeklyGoalAwardEl, weeklyAvg, 'Weekly');
+
+            // Monthly Goal (last 30 days including today)
+            const monthlyAvg = calculateAverageAdherence(30);
+            updateGoalDisplay(monthlyGoalStatusEl, monthlyGoalAwardEl, monthlyAvg, 'Monthly');
+
+            // Quarterly Goal (last 90 days including today)
+            const quarterlyAvg = calculateAverageAdherence(90);
+            updateGoalDisplay(quarterlyGoalStatusEl, quarterlyGoalAwardEl, quarterlyAvg, 'Quarterly');
         };
 
         const renderHistory = async () => {
@@ -620,19 +800,36 @@
                     : 'Meal plan updated for today and all future days!';
                     
                 // Using a simple browser alert for now. A custom modal would be better.
-                alert(successMessage); 
+                showCustomAlert(successMessage); 
                 
                 // After saving, re-render the current day's tracker to show the changes immediately.
                 await renderTracker();
                 
             } catch (error) {
                 console.error("Error saving meal plan:", error);
-                alert("Could not save meal plan. Please try again.");
+                showCustomAlert("Could not save meal plan. Please try again.");
             } finally {
                 button.disabled = false;
                 button.textContent = 'Save Meal Plan';
             }
         };
+
+        // Custom alert function to replace window.alert
+        const showCustomAlert = (message) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <p class="text-lg font-semibold mb-4">${message}</p>
+                    <button class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700" id="custom-alert-ok">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('custom-alert-ok').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        };
+
 
         const setupEventListeners = () => {
             Object.keys(tabs).forEach(key => tabs[key].addEventListener('click', (e) => {
@@ -687,9 +884,9 @@
                 }
                 if (deleteMealBtn) {
                     const mealName = deleteMealBtn.dataset.mealName;
-                    if (confirm(`Are you sure you want to delete "${mealName}"? This cannot be undone.`)) {
+                    showCustomConfirm(`Are you sure you want to delete "${mealName}"? This cannot be undone.`, () => {
                         deleteMealBtn.closest('.meal-card').remove();
-                    }
+                    });
                 }
             });
 
@@ -732,11 +929,92 @@
             document.getElementById('next-month-btn').addEventListener('click', () => { calendarDate.setMonth(calendarDate.getMonth() + 1); renderHistory(); });
         };
         
-        const handleLogin = () => {
-            signInWithPopup(auth, provider).catch(error => {
-                console.error("Google sign-in error", error);
-                alert("Could not sign in with Google. Please try again.");
+        // Custom confirm function to replace window.confirm
+        const showCustomConfirm = (message, onConfirm) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <p class="text-lg font-semibold mb-4">${message}</p>
+                    <div class="flex justify-end space-x-4">
+                        <button class="bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-400" id="custom-confirm-cancel">Cancel</button>
+                        <button class="bg-red-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-700" id="custom-confirm-ok">Confirm</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('custom-confirm-ok').addEventListener('click', () => {
+                onConfirm();
+                document.body.removeChild(modal);
             });
+            document.getElementById('custom-confirm-cancel').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        };
+
+        const handleGoogleLogin = () => {
+            signInWithPopup(auth, googleProvider)
+                .catch(error => {
+                    console.error("Google sign-in error", error);
+                    emailAuthError.textContent = "Could not sign in with Google. Please try again.";
+                    emailAuthError.classList.remove('hidden');
+                });
+        };
+
+        const handleEmailLogin = () => {
+            emailModalTitle.textContent = "Sign In / Register with Email";
+            emailSignInBtn.classList.remove('hidden'); 
+            emailRegisterBtn.classList.remove('hidden'); 
+            emailAuthError.classList.add('hidden'); // Clear previous errors
+            emailAuthModal.classList.remove('hidden');
+        };
+
+        const signInEmail = async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            emailAuthError.classList.add('hidden'); // Clear previous errors
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                emailAuthModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Email sign-in error:", error);
+                emailAuthError.textContent = error.message;
+                emailAuthError.classList.remove('hidden');
+            }
+        };
+
+        const registerEmail = async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            emailAuthError.classList.add('hidden'); // Clear previous errors
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                emailAuthModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Email registration error:", error);
+                emailAuthError.textContent = error.message;
+                emailAuthError.classList.remove('hidden');
+            }
+        };
+
+        const handleForgotPassword = async () => {
+            const email = emailInput.value;
+            emailAuthError.classList.add('hidden'); // Clear previous errors
+            if (!email) {
+                emailAuthError.textContent = "Please enter your email address to reset your password.";
+                emailAuthError.classList.remove('hidden');
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showCustomAlert("Password reset email sent! Please check your inbox.");
+                emailAuthModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Password reset error:", error);
+                emailAuthError.textContent = error.message;
+                emailAuthError.classList.remove('hidden');
+            }
         };
 
         const handleLogout = () => {
@@ -745,7 +1023,7 @@
 
         const initAppForUser = async (user) => {
             userId = user.uid;
-            userNameEl.textContent = user.displayName || 'User';
+            userNameEl.textContent = user.displayName || user.email || 'User'; 
             
             const notesDocRef = doc(db, `artifacts/${appId}/users/${userId}/data/guidelines`);
             const notesDocSnap = await getDoc(notesDocRef);
@@ -766,8 +1044,14 @@
         const init = () => {
             currentDateEl.textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('login-google-btn').addEventListener('click', handleGoogleLogin);
+            document.getElementById('login-email-btn').addEventListener('click', handleEmailLogin);
             document.getElementById('logout-btn').addEventListener('click', handleLogout);
+
+            emailSignInBtn.addEventListener('click', signInEmail);
+            emailRegisterBtn.addEventListener('click', registerEmail);
+            forgotPasswordBtn.addEventListener('click', handleForgotPassword);
+            emailModalCloseBtn.addEventListener('click', () => emailAuthModal.classList.add('hidden'));
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
